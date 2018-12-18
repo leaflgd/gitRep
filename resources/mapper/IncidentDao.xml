@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.IncidentDao">
+	
+	<!-- 事件模糊查询 -->
+	<resultMap type="org.zixing.entity.Incident" id="inganQuery">
+		<result property="incidentName" column="Event_id" /> 
+		<result property="count" column="Counts" /> 
+	</resultMap>
+	<select id="inGanDao" parameterType="String" resultMap="inganQuery">
+		select  e.Event_id,count(g.GreyBaseMap_id) Counts
+		from INF_Event e
+		left join INF_DialPiece d on e.Num_id = d.Num_id 
+		left join INF_GreyBaseMap g on d.DialPiece_id=g.DialPiece_id
+		where	
+			<if test="#{_parameter}!=null">
+				Event_id like concat('%',#{_parameter},'%')
+			</if>
+		GROUP BY Event_id
+		order by Event_id asc
+	</select>
+	
+	<!-- 查询事件下的玻片 -->
+	<resultMap id="slidentlist" type="org.zixing.dto.SlideQuery"> 
+		<result property="slideId" column="DialPiece_id" /> 
+		<result property="inName" column="Event_id" /> 
+		<result property="slideName" column="DialPiece_Num" /> 
+		<result property="count" column="Counts" />
+		<result property="checkCount" column="checkCount" />
+	</resultMap>
+	<select id="sQueryDao" parameterType="String" resultMap="slidentlist">
+		select e.Event_id,d.DialPiece_Num,d.DialPiece_id,count(g.GreyBaseMap_id) Counts,
+		(SELECT COUNT(id) FROM INF_Task_Grey tg WHERE d.DialPiece_id = tg.DialPiece_id AND tg.type = 2) checkCount
+		from INF_Event e
+		left join INF_DialPiece d on e.Num_id = d.Num_id 
+		left join INF_GreyBaseMap g on d.DialPiece_id=g.DialPiece_id
+		where Event_id=#{_parameter}
+ 		GROUP BY Event_id,DialPiece_Num,DialPiece_id
+		order by DialPiece_Num asc
+	</select>
+	
+	<!-- 查询拨片下的灰底图 -->
+	<resultMap id="graylist" type="org.zixing.dto.GrayQueryDate">
+		<result property="grayId" column="GreyBaseMap_id"/>
+		<result property="grayNumber" column="GreyBaseMap_Num" javaType="String"/>
+		<result property="grayUrl" column="GreyBaseMap_PathOri"/>
+		<result property="grayDate" column="ToSystem_Date" javaType="String" jdbcType="DATE"/>
+
+	</resultMap>
+	<select id="grayQueryDao" parameterType="String" resultMap="graylist">
+		select g.GreyBaseMap_id,GreyBaseMap_Num,GreyBaseMap_PathOri,ToSystem_Date
+		from INF_DialPiece d
+		join INF_GreyBaseMap g on g.DialPiece_id = d.DialPiece_id
+		where d.DialPiece_id=#{slideid}
+		order by GreyBaseMap_Num asc
+	</select>
+	
+	<!--     更改灰体图状态                       -->
+	<update id="grayStateDao">
+		update INF_GreyBaseMap G
+		<choose>
+			<when test="classify=='count'">set G.GreyBaseMap_CountStatus = 1</when>
+			<when test="classify=='analy'">set G.GreyBaseMap_AnalyStatus = 1</when>
+		</choose>
+		where G.GreyBaseMap_id in
+		<foreach item="item" index="index" collection="grayid" 
+		open="(" separator="," close=")">
+		#{item}
+		</foreach>
+	</update>
+	
+	<!-- 查询状态 -->
+	<select id="grayStateNum" resultType="String">
+	   select GreyBaseMap_id
+	   from INF_GreyBaseMap g
+	   where g.GreyBaseMap_CountStatus=1 || g.GreyBaseMap_AnalyStatus=1;
+	</select>
+	
+	
+	<!-- 根据灰底图id查询事件名和玻片名 -->
+	<resultMap type="org.zixing.dto.InSlideDate" id="SlideQuery">
+		<result column="Event_id" property="inName"/>
+		<result column="DialPiece_Num" property="slideName"/>
+	</resultMap>
+	<select id="inSlideQuery" resultMap="SlideQuery">
+		select Event_id,DialPiece_Num
+		from INF_Event e
+		left join INF_DialPiece d on e.Num_id = d.Num_id 
+		where d.DialPiece_id= #{slideId}
+	</select>
+	
+	<!-- 查看玻片提交状态 -->
+	<select id="slideStateQuery" resultType="String">
+		select Submit_Status
+		from INF_DialPiece d
+		where d.DialPiece_id= #{slideId}
+	</select>
+	
+	<!-- 提交状态 -->
+	<update id="slideStateAlter">
+		update INF_DialPiece d
+		set d.Submit_Status=1
+		where d.DialPiece_id=#{slideId}
+	</update>
+	
+	<!-- 状态回滚 -->
+	<update id="grayStateRoll">
+		update INF_DialPiece d
+		left join INF_GreyBaseMap g on g.DialPiece_id = d.DialPiece_id
+		set d.Submit_Status=0,g.GreyBaseMap_AnalyStatus=0,g.GreyBaseMap_CountStatus=0
+		where d.DialPiece_id=#{slideId}
+	</update>
+	
+	<!-- 删除么拨片下没有进行操作的灰底图 -->
+	<delete id="grayDelete">
+		delete from INF_GreyBaseMap g
+		where (g.GreyBaseMap_AnalyStatus=0 || g.GreyBaseMap_CountStatus=0)
+		and g.DialPiece_id=#{slideId}
+	</delete>
+	
+</mapper>

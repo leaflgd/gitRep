@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.DataSiftDao">
+
+	<insert id="insertTaskGrey" >
+		insert into INF_Task_Grey (DialPiece_id, task_id, Submit_EventName,
+		Status, Submit_CheckStatus, count,
+		type, GreyBaseMap_id, reamake,
+		create_date)
+		values
+		<foreach collection="list" item="item" index="index" open="" close="" separator=",">
+			(#{item.dialpieceId,jdbcType=INTEGER}, #{item.taskId,jdbcType=INTEGER}, #{item.submitEventname,jdbcType=VARCHAR},
+			#{item.status,jdbcType=INTEGER}, #{item.submitCheckstatus,jdbcType=TINYINT}, #{item.count,jdbcType=INTEGER},
+			#{item.type,jdbcType=CHAR}, #{item.greybasemapId,jdbcType=INTEGER}, #{item.reamake,jdbcType=VARCHAR},
+			#{item.createDate,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+
+	<insert id="insertTask" parameterType="org.zixing.entity.Task">
+		<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into INF_task
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="dialpieceId != null">
+				DialPiece_id,
+			</if>
+			<if test="status != null">
+				status,
+			</if>
+			<if test="submitCheckstatus != null">
+				Submit_CheckStatus,
+			</if>
+			<if test="submitUsername != null">
+				Submit_UserName,
+			</if>
+			<if test="submitDialpiecename != null">
+				Submit_DialPieceName,
+			</if>
+			<if test="createDate != null">
+				create_date,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="dialpieceId != null">
+				#{dialpieceId,jdbcType=INTEGER},
+			</if>
+			<if test="status != null">
+				#{status,jdbcType=INTEGER},
+			</if>
+			<if test="submitCheckstatus != null">
+				#{submitCheckstatus,jdbcType=TINYINT},
+			</if>
+			<if test="submitUsername != null">
+				#{submitUsername,jdbcType=VARCHAR},
+			</if>
+			<if test="submitDialpiecename != null">
+				#{submitDialpiecename,jdbcType=VARCHAR},
+			</if>
+			<if test="createDate != null">
+				#{createDate,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+
+	<!-- 获取事件提交次数 -->
+	<select id="findSubmitCountByInName" resultType="int">
+		SELECT COUNT(*)  FROM (SELECT COUNT(`create_date`) FROM `INF_Task_Grey` WHERE `Submit_EventName` = #{0} GROUP BY `create_date`) a
+	</select>
+
+	<!-- 提交处理状态修改 -->
+	<update id="submitbStatusUpdate">
+		update INF_DialPiece
+		set DialPiece_OperaStatus = #{status}
+		where DialPiece_id=#{slideId}
+	</update>
+
+	<update id="updateGreyBaseMapAnalyCheck">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			UPDATE `INF_GreyBaseMap` SET GreyBaseMap_AnalyStatus=1 WHERE `GreyBaseMap_id` = #{item} AND GreyBaseMap_PathShe IS NULL
+		</foreach>
+	</update>
+
+	<update id="updateGreyBaseMapCountCheck">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			UPDATE `INF_GreyBaseMap` SET GreyBaseMap_CountStatus=1 WHERE `GreyBaseMap_id` = #{item} AND GreyBaseMap_PathShe IS NULL
+		</foreach>
+	</update>
+
+	<update id="updateGreyBaseMapCheck">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			UPDATE `INF_GreyBaseMap` SET
+			<if test="item.type==1">
+				GreyBaseMap_AnalyStatus=1
+			</if>
+
+			<if test="item.type==2">
+				GreyBaseMap_CountStatus=1
+			</if> WHERE `GreyBaseMap_id` = #{item.greybasemapId} AND GreyBaseMap_PathShe IS NULL
+		</foreach>
+	</update>
+
+	<resultMap id="TaskGreyByGreyBaseMapId" type="org.zixing.entity.TaskGrey">
+		<result column="type" jdbcType="CHAR" property="type" />
+	</resultMap>
+
+	<select id="findTaskGreyByGreyBaseMapId" resultType="java.lang.String">
+		select type from INF_Task_Grey tg where GreyBaseMap_id=#{0}
+	</select>
+
+
+	<!-- 获取已做完拨片所属事件名-->
+	<select id="selectTaskByInName"  resultType="java.lang.String">
+		SELECT e.`Event_id` FROM `INF_Event` e
+		WHERE e.`Num_id` IN
+		( SELECT p.`Num_id` FROM `INF_DialPiece` p  WHERE p.`DialPiece_id` IN (SELECT t.`DialPiece_id` FROM `INF_task` t WHERE t.`status`=2 GROUP  BY t.`DialPiece_id`) GROUP BY p.`Num_id`)
+	</select>
+
+	<!-- 获取已做完拨片-->
+	<select id="selectTaskByDialPiece"  resultType="java.lang.Integer">
+		SELECT p.`DialPiece_id` FROM `INF_DialPiece` p  WHERE p.`DialPiece_id` IN (SELECT t.`DialPiece_id` FROM `INF_task` t WHERE t.`status`=2 GROUP  BY t.`DialPiece_id`) GROUP BY p.`DialPiece_id`
+	</select>
+
+</mapper>

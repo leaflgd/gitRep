@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChQueryDao">
+	
+	<!-- 染色单体标签 -->
+	<resultMap type="org.zixing.dto.ChQueryDate" id="querydate">
+		<result property="collectDate" column="Card_CollDate" javaType="String" jdbcType="DATE"/>
+		<result property="inName" column="Event_id"/>
+		<result property="patientName" column="Card_Name"/>
+		<result property="chromCary" column="Card_Caryogram"/>
+		<result property="reportPrinter" column="Card_ViewandPrinter"/>
+		<result property="reportDate" column="Card_ReportDate"/>
+		<result property="caseNumber" column="Card_MedNum"/>
+		<result property="userName" column="User_Name"/>
+		<result property="userWorkLoad" column="User_Workload"/>
+		
+	</resultMap>
+	<select id = "chQueryAll" resultMap = "querydate">
+		select Card_CollDate,Event_id,Card_Name,Card_Caryogram,Card_ViewandPrinter,Card_ReportDate
+		from INF_Event
+		where Check_Status = 1
+		<if test = 'selectType != null and selectType != "" and selectType ="1"'>
+			and Event_id like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType ="2"'>
+			and Card_Caryogram like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType ="3"'>
+			and Card_ViewandPrinter like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType ="4"'>
+			and Card_Name like concat('%',#{price},'%')
+		</if>
+		<if test = 'time1 != null and time1 != ""'>
+			and Card_CollDate &gt; #{time1}
+		</if>
+		<if test = 'time2 != null and time2 != ""'>
+			and Card_CollDate &lt;  #{time2}
+		</if>
+	</select>
+	
+	<select id = "chQueryAllCount" resultMap = "querydate">
+		select u.User_Name , u.User_Workload
+		from INF_User u
+		left join INF_Event e on e.User_id = u.User_id
+		where Card_Check = 1 
+		<if test = 'time3 != null and time3 != ""'>
+			and e.Card_CollDate &gt; #{time3}
+		</if>
+		<if test = 'time4 != null and time4 != ""'>
+			and e.Card_CollDate &lt;  #{time4}
+		</if>
+	</select>
+	
+</mapper>

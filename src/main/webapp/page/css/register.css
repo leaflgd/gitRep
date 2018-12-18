@@ -1,0 +1,155 @@
+/*全局样式*/
+*{
+	margin: 0;padding: 0;
+}
+a{
+	text-decoration: none;
+}
+img{
+	border: none;
+}
+html{
+	width:100%;height:100%;
+}
+body{
+	width:100%;height:100%;
+}
+/*字体*/
+@font-face{
+	font-family: myfont;
+	src: url(../font/NotoSansHans-DemiLight.otf);
+}
+
+/*背景*/
+.register_bg{
+	width: 100%;height: 90%;background: url('../images/bg.jpg')no-repeat;
+}
+.login_logo {
+    position: absolute;
+    right: 8%;
+    top: 5%;
+}
+/*注册框*/
+.register_box{
+	width: 467px;height: 440px;position: absolute;top: 30%; right: 15%;
+}
+.p1{
+	color: #FFFFFF;font-family: myfont;font-size: 24px;text-align: center;
+}
+/*提示信息*/
+#info{
+	position: absolute;top: 44px;left: 73px;color: #4d9ec2;font-size: 15px;
+}
+/*注册功能*/
+.register_fun{
+	width: 465px;height: 435px;margin-top: 32px;background: #333b46;border-radius: 5px;border: 1px solid #4e5661;position: relative;
+}
+/*用户名*/
+.username{
+	width: 269px;margin: 0 auto;height: 47px;font-size: 14px;padding: 9px 0px 9px 5px;background: #FFFFFF !important;float: left;border: none;outline: none;border-radius:0 5px 5px 0 ; 
+}
+.user_bg{
+	background: #FFFFFF;width: 46px;height: 47px;display: block;float: left;border: none; border-radius:5px 0 0 5px ; position: relative;
+}
+.user_bg i{
+	background: url('../images/user.png');width: 46px;height: 47px;display: block;
+}
+.register1:after{
+	display: block;clear: both;content: '';
+}
+.register1{
+	width: 320px;margin: 0 auto;margin-top: 72px;
+}
+.user_bg p{
+	position: absolute;border-right:1px solid #999999;width: 0;height: 24px;right:0;top: 11px;
+}
+/*真实姓名*/
+.register0{
+	width: 320px;margin: 0 auto;margin-top: 16px;margin-bottom: 16px;
+}
+.truename{
+	width: 269px;margin: 0 auto;height: 47px;font-size: 14px;padding: 9px 0px 9px 5px;background: #FFFFFF !important;float: left;border: none;outline: none;border-radius:0 5px 5px 0 ;
+	margin-bottom:16px;
+}
+.truename_bg{
+	background: #FFFFFF;width: 46px;height: 47px;display: block;float: left;border: none; border-radius:5px 0 0 5px ; position: relative;
+}
+.truename_bg i{
+	background: url('../images/truename_16.png') no-repeat;width: 46px;height: 47px;display: block;
+}
+.truename_bg p{
+	position: absolute;border-right:1px solid #999999;width: 0;height: 24px;right:0;top: 11px;
+}
+/*密码*/
+.password{
+	width: 269px;margin: 0 auto;height: 47px;font-size: 14px;padding: 9px 0px 9px 5px;background: #FFFFFF !important;float: left;border: none;outline: none;border-radius:0 5px 5px 0 ; 
+}
+.pas_bg{
+	background: #FFFFFF;width: 46px;height: 47px;display: block;float: left;border: none; border-radius:5px 0 0 5px ; position: relative;
+}
+.pas_bg i{
+	background: url('../images/password.png');width: 46px;height: 47px;display: block;
+}
+.register2:after{
+	display: block;clear: both;content: '';
+}
+.register2{
+	width: 320px;margin: 0 auto;margin-top: 16px;
+}
+.pas_bg>p{
+	position: absolute;border-right:1px solid #999999;width: 0;height: 24px;right:0;top: 11px;
+}
+/*确认密码*/
+.password2{
+	width: 269px;margin: 0 auto;height: 47px;font-size: 14px;padding: 9px 0px 9px 5px;background: #FFFFFF !important;float: left;border: none;outline: none;border-radius:0 5px 5px 0 ; 
+}
+.sure_bg{
+	background: #FFFFFF;width: 46px;height: 47px;display: block;float: left;border: none; border-radius:5px 0 0 5px ; position: relative;
+}
+.sure_bg i{
+	background: url('../images/sure.png');width: 46px;height: 47px;display: block; border-radius:5px 0 0 5px ;
+}
+.register3:after{
+	display: block;clear: both;content: '';
+}
+.register3{
+	width: 320px;margin: 0 auto;margin-top: 16px;
+}
+.sure_bg>p{
+	position: absolute;border-right:1px solid #999999;width: 0;height: 24px;right:0;top: 11px;
+}
+/*注册按钮*/
+.btn_box{
+	text-align: center;margin-top: 14px;
+}
+.register_btn{
+	width: 320px;height: 44px;border: none;outline: none;color: #FFFFFF;background: linear-gradient(#2ec0fb, #0e9aee,#0091ea);
+	margin: 0 auto;border-radius: 5px;font-size: 18px;
+}
+/*跳转登录*/
+.lot{
+	width: 320px;margin: 0 auto;margin-top:26px;
+}
+.lot a{
+	color: #FFFFFF;font-size: 13px;float: right;
+}
+.lot a span{
+	font-size: 16px !important;
+}
+.lot a:hover{
+	font-weight: bold;
+}
+.lot a:hover span{
+	color: #59ceff;
+}
+
+/*底部*/
+.footer{
+	width: 100%;height: calc(10% - 15px);background: #000000;text-align: center;padding-top: 15px;
+}
+.footer span img{
+	width: 250px;
+}
+.footer p{
+	color: #666666;font-size: 11px;
+}

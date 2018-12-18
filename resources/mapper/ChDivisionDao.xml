@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChDivisionDao">
+	<!-- 染色体分割页面初始化 -->
+	<!-- 增强灰底图 -->
+	<select id="DivisionEnhanceGrey" resultType="String">
+		select
+		GreyBaseMap_PathEnh
+		from INF_GreyBaseMap
+		where GreyBaseMap_id=#{grayid}
+	</select>
+
+	<!-- 原始灰底图 -->
+	<select id="DivisionOriginalGrey" resultType="String">
+		select
+		GreyBaseMap_PathShe
+		from INF_GreyBaseMap
+		where GreyBaseMap_id=#{grayid}
+	</select>
+
+	<!-- 多体 -->
+	<resultMap type="org.zixing.dto.ChromQuery" id="chq">
+		<result property="chromId" column="Chromosome_id" />
+		<result property="greyId" column="GreyBaseMap_id" />
+		<result property="chromMark" column="Chromosome_Num" />
+		<result property="chromPath" column="Chromosome_Path" />
+		<result property="chromEnhance" column="Chromosome_Enhance" />
+		<result property="chromBin" column="Chromosome_Bin" />
+		<result property="chromUrl" column="Chromosome_Adjust" />
+		<result property="chromState" column="Chromosome_Status"
+			javaType="boolean" jdbcType="TINYINT" />
+		<result property="chromCount" column="Chromosome_count" />
+	</resultMap>
+	<select id="chMultimerInit" resultMap="chq">
+		select
+		Chromosome_id,Chromosome_Enhance
+		from INF_Chromosome
+		where GreyBaseMap_id=#{grayid}
+		and Chromosome_Opera=0
+		order by Chromosome_Num desc,Chromosome_id desc
+	</select>
+
+	<!-- 查询原始染色体轮廓图 -->
+	<select id="chOperationQuery" resultType="String">
+		select
+		Chromosome_Offset
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	<!-- 查询原始染色体原图 -->
+	<select id="chRawQuery" resultType="String">
+		select Chromosome_Path
+		from
+		INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 查询名称 -->
+	<resultMap type="org.zixing.dto.ChNames" id="chnames">
+		<result property="slideName" column="DialPiece_Num" />
+		<result property="grayName" column="GreyBaseMap_Num" />
+		<result property="chromName" column="Chromosome_Num" />
+	</resultMap>
+	<select id="chNamesQuery" resultMap="chnames">
+		select
+		c.Chromosome_Num,d.DialPiece_Num,g.GreyBaseMap_Num
+		from INF_Chromosome c
+		left join INF_GreyBaseMap g on c.GreyBaseMap_id = g.GreyBaseMap_id
+		left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id
+		where c.Chromosome_id=#{chromid};
+	</select>
+
+	<!-- 查询坐标中轮廓的最大步骤数 -->
+	<select id="chProcedureMaximum" resultType="int">
+		select Cancel_OperaStep
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+		order by Cancel_OperaStep
+		desc limit 1
+	</select>
+
+
+	<!-- 获取画线涂抹撤销的步骤总数 -->
+	<select id="chProcedureSum" resultType="int">
+		select Chromosome_Steps
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 设置步骤总数数 -->
+	<update id="chProcedureSumSet">
+		update INF_Chromosome
+		set Chromosome_Steps =
+		#{stepSum}
+		where Chromosome_id=#{chromid}
+	</update>
+
+
+	<!-- 设置轮廓步骤 -->
+	<insert id="chSplittingStep">
+		insert into
+		INF_Cancel(Chromosome_id,Cancel_Offset,Cancel_OperaStep,Cancel_OperaStatus)
+		value(#{cancel.chromId},#{cancel.offset},#{cancel.num},#{cancel.status});
+	</insert>
+
+	<!-- 删除指定的轮廓步骤 -->
+	<delete id="DivisionStepDelete">
+		delete
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+		order by Cancel_OperaStep
+		desc limit 1
+	</delete>
+	
+	<!-- 删除所有的轮廓步骤 -->
+	<delete id="DivisionStepDeletes">
+		delete
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+	</delete>
+
+	<!-- 分割状态更改 -->
+	<update id="chDivisionStatusAlter">
+		update INF_Chromosome
+		set Chromosome_Opera = #{status}
+		where
+		Chromosome_id=#{chromid}
+	</update>
+
+	<!-- 批量删除 -->
+	<delete id="chromDelete">
+		delete from INF_Chromosome
+		where Chromosome_id in
+		<foreach item="item" index="index" collection="chromid" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 查询处理步骤 -->
+	<resultMap type="org.zixing.dto.InfLog" id="ProcessStepsDelete">
+		<result column="Logs_id" property="logId" />
+		<result column="Logs_Steps" property="logName"/>
+		<result column="opera_time" property="date" javaType="String" jdbcType="DATE"/>
+	</resultMap>
+	<select id="ProcessStepsQuery" resultMap="ProcessStepsDelete">
+		select Logs_id,Logs_Steps,opera_time
+		from INF_Logs l
+		left join INF_Chromosome c on c.Chromosome_id=l.Chromosome_id
+		where c.GreyBaseMap_id=#{greyid}
+	</select>
+	<!-- 处理步骤删除 -->
+	<delete id="ProcessStepsDelete">
+		delete from INF_Logs 
+		where  Logs_id=#{logid}
+	</delete>
+	<!-- 查询删除处理步骤的父类id -->
+	<select id="chDivisionDeleteIDQuery" resultType="String">
+		select Chromosome_id
+		from INF_Logs
+		where Logs_id=#{logid}
+	</select>
+	
+	<!-- 删除处理步骤关联的子图 -->
+	<delete id="chDivisionDelete">
+		delete from INF_Chromosome
+		where Chromosome_Father=#{chlogid}
+	</delete>
+</mapper>

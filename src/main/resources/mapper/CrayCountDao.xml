@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.CrayCountDao">
+	<!--                 灰底图                                                                       -->
+	<!-- 查询么事件下被选中的灰底图 -->
+	<resultMap type="org.zixing.dto.GrayOper" id="grayQueryMap">
+		<result property="grayId" column="GreyBaseMap_id"/>
+		<result property="inName" column="Event_id" />
+		<result property="grayNumber" column="GreyBaseMap_Num" />
+		<result property="grayUrl" column="GreyBaseMap_PathShe" />
+		<result property="grayDate" column="ToSystem_Date" javaType="String" jdbcType="DATE"/>
+		<result property="grayCray" column="Arith_Karyotype" />
+		<result property="grayCount" column="Arith_Total" />
+		<result property="grayCountRemark" column="Arith_Total_Final" />
+		<result property="analyCheck" column="GreyBaseMap_AnalyCheck"/>
+		<result property="countCheck" column="GreyBaseMap_CountCheck"/>
+		<!-- <result property="grayCheck" column="GreyBaseMap_CountCheck"/> -->
+		<result property="slideName" column="DialPiece_Num"/>
+	</resultMap>
+	<select id="grayQuerys" resultMap="grayQueryMap">
+		select g.GreyBaseMap_id,d.DialPiece_Num,e.Event_id,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck,g.Arith_Karyotype,g.Arith_Total ,g.Arith_Total_Final
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id= #{inName} and GreyBaseMap_PathShe is not null
+		<choose> 
+			<when test="sum=='45' or sum=='46' or sum=='47'">and g.Arith_Total=#{sum}</when>
+			<when test="sum!='45' and sum!='46' and sum!='47' and sum!=null and sum!=''">and g.Arith_Total!=45 and g.Arith_Total!=46 and g.Arith_Total!=47 </when>
+		</choose> 
+		and g.GreyBaseMap_CountStatus = 1
+		order by d.DialPiece_Num,g.GreyBaseMap_Num asc
+	</select>
+	
+	<select id="grayQuerys1" resultMap="grayQueryMap">
+		select g.GreyBaseMap_id,d.DialPiece_Num,e.Event_id,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck,g.Arith_Karyotype,g.Arith_Total ,g.Arith_Total_Final
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id= #{inName} and GreyBaseMap_PathShe is not null
+		and g.GreyBaseMap_CountStatus = 1
+		order by d.DialPiece_Num,g.GreyBaseMap_Num asc
+	</select>
+	
+	<!-- 核型分析查询计数 -->
+	<select id="grayQuerysC" resultMap="grayQueryMap">
+        select e.Check_Status,g.GreyBaseMap_id,d.DialPiece_Num,e.Event_id,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck,g.Arith_Karyotype,g.Arith_Total ,g.Arith_Total_Final
+        from INF_GreyBaseMap g
+            left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+            left join INF_Event e on e.Num_id = d.Num_id
+        where e.Event_id= #{inName} AND g.Status=1
+        <choose> 
+            <when test="sum=='45' or sum=='46' or sum=='47'">and g.Arith_Total=#{sum}</when>
+            <when test="sum!='45' and sum!='46' and sum!='47' and sum!=null and sum!=''">and g.Arith_Total!=45 and g.Arith_Total!=46 and g.Arith_Total!=47 </when>
+        </choose> 
+        <if test="dialPieceNum != null and dialPieceNum != ''">
+            and d.DialPiece_Num = #{dialPieceNum}
+        </if>
+        and g.GreyBaseMap_CountStatus = 1
+        order by d.DialPiece_Num,g.GreyBaseMap_Num asc
+    </select>
+
+	<select id="grayQuerysC2" resultMap="grayQueryMap">
+    SELECT e.Check_Status,g.GreyBaseMap_id,d.DialPiece_Num,e.Event_id,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck,g.Arith_Karyotype,g.Arith_Total ,g.Arith_Total_Final
+        FROM INF_GreyBaseMap g
+            LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id 
+            LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id=#{inName} AND g.Status=1
+        AND g.GreyBaseMap_AnalyStatus = 1
+        ORDER BY g.GreyBaseMap_AnalyCheck DESC ,g.`GreyBaseMap_Num` ASC
+	</select>
+<!-- 核型分析计数部分个人信息 -->
+    <resultMap type="org.zixing.dto.FolderDate" id="folder">
+        <result property="evenNumber" column="Event_id" />
+        <result property="name" column="Card_Name" />
+        <result property="sex" column="Card_Sex" />
+        <result property="caryogram" column="Card_Caryogram" />
+    </resultMap>
+
+    <select id="infoQuery" resultMap="folder">
+        select Event_id,Card_Name,Card_Sex,Card_Caryogram from INF_Event where Event_id = #{inName}
+
+    </select>
+
+<!-- 事件核对状态查询 -->
+	<resultMap type="org.zixing.dto.IncidentCheck" id="incheck">
+		<result property="inName" column="Event_id" />
+		<result property="inCheck" column="Check_Status" javaType="BOOLEAN"
+			jdbcType="TINYINT" />
+		<result property="status" column="DialPiece_OperaStatus"
+			javaType="BOOLEAN" jdbcType="TINYINT" />
+		<result property="analyStatusSum" column="AnalyStatus" />
+		<result property="countStatusSum" column="CountStatus" />
+		<result property="caryogram" column="Card_Caryogram" />
+		<result property="analyCheck" column="AnalyCheck" />
+		<result property="countCheck" column="CountCheck" />
+		<!-- <collection property="maximumArithKaryotype" javaType="java.lang.String"
+			select="org.zixing.dao.CrayAnalysisDao.querysMaximumArithKaryotype"
+			column="Event_id" /> -->
+		<collection property="countCheck" javaType="java.lang.String"
+					select="org.zixing.dao.CrayAnalysisDao.querysAnalyzeCount" column="Event_id" />
+	</resultMap>
+	<select id="incidentQuery" resultMap="incheck">
+		select distinct e.Event_id ,
+		e.Check_Status,d.DialPiece_OperaStatus,
+		(SELECT COUNT(*) FROM  `INF_Task_Grey` tg WHERE tg.`Submit_EventName`=e.Event_id AND tg.`type`=1) AnalyStatus,
+		(SELECT COUNT(*) FROM  `INF_Task_Grey` tg WHERE tg.`Submit_EventName`=e.Event_id AND tg.`type`=2) CountStatus
+		,SUM(g.GreyBaseMap_AnalyCheck)
+		AnalyCheck,SUM(g.GreyBaseMap_CountCheck) CountCheck,e.Card_Caryogram
+		from INF_Event e
+		join INF_DialPiece d on d.Num_id = e.Num_id
+		join
+		INF_GreyBaseMap g on g.DialPiece_id = d.DialPiece_id
+		WHERE 1=1 <!--d.Submit_Status=1-->
+		AND e.Event_id = #{inName}
+		AND (e.Num_id,d.DialPiece_OperaStatus) IN (
+		SELECT e.Num_id,MAX(d.DialPiece_OperaStatus)
+		from INF_Event e
+		left join INF_DialPiece d on d.Num_id = e.Num_id
+		group by e.Num_id
+		order by e.Num_id asc
+		)
+		group by
+		e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram
+		order
+		by e.Event_id asc,d.DialPiece_OperaStatus desc
+	</select>
+	
+	<select id="incidentQuery1" resultMap="incheck">
+       SELECT DISTINCT e.Event_id ,
+        e.Check_Status,d.DialPiece_OperaStatus,SUM(g.GreyBaseMap_AnalyStatus)
+        AnalyStatus,SUM(g.GreyBaseMap_CountStatus) CountStatus
+        ,SUM(g.GreyBaseMap_AnalyCheck)
+        AnalyCheck,SUM(g.GreyBaseMap_CountCheck) CountCheck,e.Card_Caryogram
+        FROM INF_Event e
+        JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+        JOIN
+        INF_GreyBaseMap g ON g.DialPiece_id = d.DialPiece_id
+        WHERE g.`GreyBaseMap_AICountStatus` AND e.Event_id= #{inName}
+        AND (e.Num_id,d.DialPiece_OperaStatus) IN (
+        SELECT e.Num_id,MAX(d.DialPiece_OperaStatus)
+        FROM INF_Event e
+        LEFT JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+        GROUP BY e.Num_id
+        ORDER BY e.Num_id ASC
+        )
+        GROUP BY
+        e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram
+        ORDER
+        BY e.Event_id ASC,d.DialPiece_OperaStatus DESC
+    </select>
+	
+	<!-- 查询核对状态是否生成报告 -->
+	<select id="statusFind" resultType="String">
+		SELECT Check_Status FROM INF_Event WHERE Event_id=#{inName}
+	</select>
+	
+	<!-- 查询末次生成报告的核型 -->
+	<select id="recordFind" resultType="String">
+   		SELECT LastUpdateCaryogram FROM INF_Event WHERE Event_id=#{inName}
+	</select>
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChQueryDao">
+	
+	<!-- 染色单体标签 -->
+	<resultMap type="org.zixing.dto.ChQueryDate" id="querydate">
+		<result property="collectDate" column="Card_CollDate" javaType="String" jdbcType="DATE"/>
+		<result property="inName" column="Event_id"/>
+		<result property="patientName" column="Card_Name"/>
+		<result property="chromCary" column="Card_Caryogram"/>
+		<!-- <result property="reportPrinter" column="Card_ViewandPrinter"/> -->
+		<result property="reportDate" column="Card_ReportDate"/>
+		<result property="caseNumber" column="Card_MedNum"/>
+		<result property="userName" column="User_Name"/>
+		<result property="userWorkLoad" column="User_Workload"/>
+		<result property="viewAndPrinter" column="Card_ViewandPrinter"/>
+		<result property="viewAndPrinterCount" column="viewandPrinterCount"/>
+		<result property="patientAge" column="Card_Age"/>
+		<result property="patientSex" column="Card_Sex"/>
+		<result property="clinicalDiagnosis" column="Card_ClinDiag"/>
+		<result property="xpr" column="Card_Checker"/>
+		<result property="auditor" column="Card_Auditor"/>
+		
+	</resultMap>
+	<!-- 查询页面中的事件列表查询 -->
+	<select id = "chQueryAll" resultMap = "querydate">
+		select Card_CollDate,Event_id,Card_MedNum,Card_Name,Card_Caryogram,Card_ViewandPrinter,Card_ReportDate
+		,Card_Checker,Card_Auditor,Card_ClinDiag,Card_Age,Card_Sex
+		from INF_Event
+		where Event_id is not null
+		<if test = 'selectType != null and selectType != "" and selectType =="1"'>
+			and Event_id like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType =="2"'>
+			and Card_Caryogram like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType =="3"'>
+			and Card_ViewandPrinter like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType =="4"'>
+			and Card_Name like concat('%',#{price},'%')
+		</if>
+		<if test = 'selectType != null and selectType != "" and selectType =="5"'>
+			and Card_MedNum like concat('%',#{price},'%')
+		</if>
+		<if test = 'time1 != null and time1 != ""'>
+			and Card_ReportDate &gt;= #{time1}
+		</if>
+		<if test = 'time2 != null and time2 != ""'>
+			and Card_ReportDate &lt;=  #{time2}
+		</if>
+	</select>
+	<!-- 查询页面中的统计查询 -->
+	<select id = "chQueryAllCount" resultMap = "querydate">
+		select Card_ViewandPrinter, COUNT(Card_ViewandPrinter) viewandPrinterCount
+		from INF_Event
+		where Card_ViewandPrinter is not null
+		<if test = 'time3 != null and time3 != ""'>
+			and Card_ReportDate &gt;= #{time3}
+		</if>
+		<if test = 'time4 != null and time4 != ""'>
+			and Card_ReportDate &lt;=  #{time4}
+		</if>
+		group by Card_ViewandPrinter
+		order by viewandPrinterCount desc;
+	</select>
+	
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.UserDao">
+	<!-- 为dao接口提供sql语句配置 -->
+	<!--登录 -->
+	<select id="userLog" parameterType="org.zixing.entity.User" resultType="String">
+		select User_Name
+		from INF_User
+		where User_LoginName=#{userLogin}
+		and User_Password=#{userPassword}
+	</select>
+	<!-- 注册 -->
+	<insert id="userReg" parameterType="org.zixing.entity.User">
+		insert into
+		INF_User(User_Name,User_LoginName,User_Password,Create_Date)
+		value(#{userName},#{userLogin},#{userPassword},#{userDate});
+	</insert>
+	<!-- 单个查询 -->
+	<select id="userLogin" parameterType="String" resultType="String">
+		select User_Name
+		from INF_User
+		where User_LoginName = #{_parameter}
+	</select>
+	<!-- 查询所有用户名 -->
+	<select id="logName" resultType="String">
+		select User_LoginName from INF_User
+	</select>
+</mapper>

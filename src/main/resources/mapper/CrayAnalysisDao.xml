@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.CrayAnalysisDao">
+	<!-- 灰底图 -->
+	<!-- 查询么事件下被选中的灰底图 -->
+	<resultMap type="org.zixing.dto.GrayOper" id="grayQueryMap">
+		<result property="grayId" column="GreyBaseMap_id" />
+		<result property="inName" column="Event_id" />
+		<result property="slideName" column="DialPiece_Num" />
+		<result property="grayNumber" column="GreyBaseMap_Num" />
+		<result property="grayUrl" column="GreyBaseMap_PathShe" />
+		<result property="grayDate" column="ToSystem_Date" javaType="String"
+			jdbcType="DATE" />
+		<result property="grayCray" column="Arith_Karyotype" />
+		<result property="analyCheck" column="GreyBaseMap_AnalyCheck" />
+		<result property="countCheck" column="GreyBaseMap_CountCheck" />
+		
+		<result property="analyStatus" column="GreyBaseMap_AnalyStatus" />
+        <result property="countStatus" column="GreyBaseMap_CountStatus" />
+        <result property="checkTag" column="GreyBaseMap_Tag" />
+		<!-- <result property="grayCheck" column="GreyBaseMap_AnalyCheck" /> -->
+	</resultMap>
+	<select id="grayQuerys" resultMap="grayQueryMap">
+		select
+		g.GreyBaseMap_id,e.Event_id,d.DialPiece_Num,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.Arith_Karyotype,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck
+		,g.GreyBaseMap_AnalyStatus,g.GreyBaseMap_CountStatus,g.GreyBaseMap_Tag
+		from INF_GreyBaseMap g
+		left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id
+		left join INF_Event e on e.Num_id = d.Num_id
+		left join INF_Chromosome c on c.GreyBaseMap_id = g.GreyBaseMap_id
+		where
+		e.Event_id= #{inName}
+		and GreyBaseMap_AnalyStatus =1
+		and GreyBaseMap_PathShe is not null
+		group by
+		GreyBaseMap_id,Event_id,GreyBaseMap_PathShe,ToSystem_Date,GreyBaseMap_Num,g.Arith_Karyotype,g.GreyBaseMap_AnalyCheck
+		
+		ORDER BY g.`GreyBaseMap_AllChromosome` desc ,d.DialPiece_Num,g.GreyBaseMap_Num ASC
+		<!-- order by d.DialPiece_Num,g.GreyBaseMap_Num asc -->
+	</select >
+	
+	<select id="grayCheckState" resultType="String">
+		select GreyBaseMap_AnalyCheck
+		from INF_GreyBaseMap
+		where GreyBaseMap_id=#{grayNum}
+	</select>
+	
+	
+	<!-- 根据Event_id 获取重复值最多的核型 -->
+	<select id="querysMaximumArithKaryotype" resultType="java.lang.String">
+		SELECT g.Arith_Karyotype,COUNT(g.Arith_Karyotype) num FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		WHERE
+		e.Event_id= #{0}
+		AND GreyBaseMap_AnalyStatus =1
+		AND GreyBaseMap_PathShe IS NOT NULL
+		AND g.GreyBaseMap_AnalyCheck = true
+		GROUP BY g.Arith_Karyotype 
+		ORDER BY num  DESC LIMIT 1;
+	</select>
+	
+	<!-- 根据Event_id 获取核型 -->
+	<select id="queryAllArithKaryotype" resultType="java.lang.String">
+		SELECT g.Arith_Karyotype
+		FROM INF_GreyBaseMap g LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		LEFT JOIN INF_Chromosome c ON c.GreyBaseMap_id = g.GreyBaseMap_id
+		WHERE e.Event_id= #{0} AND GreyBaseMap_AnalyStatus =1
+		AND g.GreyBaseMap_AnalyCheck = TRUE
+		AND GreyBaseMap_PathShe IS NOT NULL
+		GROUP BY Event_id,GreyBaseMap_PathShe,ToSystem_Date,GreyBaseMap_Num,g.Arith_Karyotype,g.GreyBaseMap_AnalyCheck
+	</select>
+	
+	<!-- 根据Event_id 获取核型分析计数总数 -->
+	<select id="querysAnalyzeCount" resultType="java.lang.Integer">
+		SELECT COUNT(g.`GreyBaseMap_id`) count_num FROM INF_GreyBaseMap g WHERE g.`GreyBaseMap_id` IN (
+		SELECT g.GreyBaseMap_id
+		FROM INF_GreyBaseMap g LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id 
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id WHERE e.Event_id= #{0}
+		AND GreyBaseMap_PathShe IS NOT NULL <!-- AND g.GreyBaseMap_CountStatus = 1  -->
+		AND (g.GreyBaseMap_CountCheck=TRUE || g.GreyBaseMap_AnalyCheck=TRUE)
+		ORDER BY d.DialPiece_Num,g.GreyBaseMap_Num ASC 
+		)
+	</select>	
+	
+	<select id="querysAnalyzeCount1" resultType="java.lang.Integer">
+		SELECT COUNT(g.`GreyBaseMap_id`) count_num FROM INF_GreyBaseMap g WHERE g.`GreyBaseMap_id` IN (
+		SELECT g.GreyBaseMap_id
+		FROM INF_GreyBaseMap g LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id 
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id WHERE e.Event_id= #{0}
+		AND GreyBaseMap_PathShe IS NOT NULL  AND (g.GreyBaseMap_CountStatus = 1 || g.GreyBaseMap_AnalyStatus = 1  )
+		ORDER BY d.DialPiece_Num,g.GreyBaseMap_Num ASC 
+		)
+	</select>
+	
+
+</mapper>

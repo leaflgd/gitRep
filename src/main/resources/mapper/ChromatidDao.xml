@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChromatidDao">
+	<!-- 事件核对状态查询 -->
+	<resultMap type="org.zixing.dto.IncidentCheck" id="incheck">
+		<result property="inName" column="Event_id" />
+		<result property="inCheck" column="Check_Status" javaType="BOOLEAN"
+			jdbcType="TINYINT" />
+		<result property="status" column="DialPiece_OperaStatus"
+			javaType="BOOLEAN" jdbcType="TINYINT" />
+		<result property="analyStatusSum" column="AnalyStatus" />
+		<result property="countStatusSum" column="CountStatus" />
+		<result property="caryogram" column="Card_Caryogram" />
+		<result property="analyCheck" column="AnalyCheck" />
+		<result property="countCheck" column="CountCheck" />
+		<!-- <collection property="maximumArithKaryotype" javaType="java.lang.String"
+			select="org.zixing.dao.CrayAnalysisDao.querysMaximumArithKaryotype"
+			column="Event_id" /> -->
+		<collection property="countCheck" javaType="java.lang.String"
+			select="org.zixing.dao.CrayAnalysisDao.querysAnalyzeCount" column="Event_id" />
+	</resultMap>
+	<select id="incidentQuery" resultMap="incheck">
+		select distinct e.Event_id ,
+		e.Check_Status,d.DialPiece_OperaStatus,SUM(g.GreyBaseMap_AnalyStatus)
+		AnalyStatus,SUM(g.GreyBaseMap_CountStatus) CountStatus
+		,SUM(g.GreyBaseMap_AnalyCheck)
+		AnalyCheck,SUM(g.GreyBaseMap_CountCheck) CountCheck,e.Card_Caryogram
+		from INF_Event e
+		join INF_DialPiece d on d.Num_id = e.Num_id
+		join
+		INF_GreyBaseMap g on g.DialPiece_id = d.DialPiece_id
+		where d.Submit_Status=1
+		<if test='incheck!=""&amp;incheck&lt;2'>
+			and e.Check_Status=#{incheck}
+		</if>
+		<if test='inName!=""&amp;incheck&lt;2'>
+			and e.Event_id like concat('%',#{inName},'%')
+		</if>
+		<if test='date!=""'>
+			and d.ToSystem_Date=#{date,jdbcType=DATE}
+		</if>
+
+		<if test='incheck==2'>
+			and e.Card_Caryogram like concat('%',#{inName},'%')
+		</if>
+		and (e.Num_id,d.DialPiece_OperaStatus) in (
+		SELECT e.Num_id,MAX(d.DialPiece_OperaStatus)
+		from INF_Event e
+		left join INF_DialPiece d on d.Num_id = e.Num_id
+		group by e.Num_id
+		order by e.Num_id asc
+		)
+		group by
+		e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram
+		order
+		by e.Event_id asc,d.DialPiece_OperaStatus desc
+	</select>
+	
+	<select id="inNameChack" resultType="String">
+	select Check_Status from INF_Event where Event_id=#{inName}
+	
+	</select>
+	
+	<select id="queryCardCaryogram" resultType="String">
+		select Card_Caryogram from INF_Event where Event_id=#{inName}
+	</select>
+	
+	<update id="updatePrintReort">
+		update INF_GreyBaseMap set GreyBaseMap_PDFTag=true where GreyBaseMap_id=#{0}
+	</update>
+</mapper>

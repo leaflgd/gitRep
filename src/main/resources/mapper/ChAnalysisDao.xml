@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChAnalysisDao">
+<!--                 染色单体                                                                        -->
+	<!-- 染色单体标签 -->
+	 <resultMap type="org.zixing.dto.ChromLabel" id="chAnalyLabel">
+		<result property="inName" column="Event_id"/>
+		<result property="slideName" column="DialPiece_Num"/>
+		<result property="grayNumber" column="GreyBaseMap_Num"/>  
+		<result property="grayUrl" column="GreyBaseMap_PathShe"/>
+		<result property="chromCary" column="Arith_Karyotype"/>
+		<result property="chromBig" column="GreyBaseMap_Big"/>
+		<result property="chromColorOpera" column="GreyBaseMap_ColorOpera"/>
+		<result property="chromSmall" column="GreyBaseMap_Small"/>
+	</resultMap>
+	
+	<!-- 灰底图的样式 -->
+	<resultMap type="org.zixing.entity.GrayBaseMapStatus" id="grayStatus">
+		<result property="grayBaseMapId" column="GreyBaseMap_id"/>
+		<result property="chromsomeId" column="Chrom_id"/>
+		<result property="chromsomeStyle" column="Chromosome_style"/>
+		<result property="chromsomeEnhance" column="Chromosome_Enhance"/>
+	</resultMap>
+	
+	<select id="chCountLabelQuery" resultMap="chAnalyLabel">
+		select e.Event_id, d.DialPiece_Num ,g.GreyBaseMap_Num,g.GreyBaseMap_PathShe,g.Arith_Karyotype,g.GreyBaseMap_Big,g.GreyBaseMap_ColorOpera,g.GreyBaseMap_Small
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+		where g.GreyBaseMap_id=#{grayid};
+	</select>  
+	<!-- 单个染色体查询 -->
+	<resultMap type="org.zixing.dto.ChromQuery" id="chAnalyq">
+	
+	
+		<result property="chromId" column="Chromosome_id"/>
+		<result property="greyId" column="GreyBaseMap_id"/>
+		<result property="chromMark" column="Chromosome_Num"/>
+		<result property="chromPath" column="Chromosome_Path"/>
+		<result property="chromEnhance" column="Chromosome_Enhance"/>
+		<result property="chromBin" column="Chromosome_Bin"/>				
+		<result property="chromUrl" column="Chromosome_Adjust"/>
+		<result property="chromState" column="Chromosome_Status" javaType="boolean" jdbcType="TINYINT"/>
+		<result property="chromCount" column="Chromosome_count"/>
+		<result property="chScacss" column="Chromosome_Circumgyrate"/>
+		<result property="chRotcss" column="Chromosome_Mirror"/>
+		<result property="chCircumX" column="Chromosome_CircumXdegree"/>
+		<!-- 非染色体隐藏 -->
+		<result property="chromAllpic" column="GreyBaseMap_AllChromosome"/>
+		<result property="cutOriPic" column="GreyBaseMap_CutOriPic"/>
+		<!-- 染色体隐藏 -->
+		<result property="chromAllpic" column="GreyBaseMap_AllChromosomeBaby"/>
+		<result property="cutOriPic" column="GreyBaseMap_BabyPic"/>
+		
+		<result property="toSystemDate" column="ToSystem_Date"/>
+		<result property="inName" column="Event_id"/>
+		<result property="slideName" column="DialPiece_Num"/>
+		<result property="chromRemake" column="Arith_Karyotype"/>
+		<result property="grayUrlOut" column="GreyBaseMap_PathShe"/>
+		<result property="arithOffset" column="GreyBaseMap_PathOut"/>
+		<result property="grayNumber" column="GreyBaseMap_Num"/>
+		<result property="orderByNum" column="OrderBy_Num"/>
+		<result property="topDown" column="TopDown"/>
+		
+		
+	</resultMap>
+	<select id="chQuery" resultMap="chAnalyq">
+		select OrderBy_Num,TopDown,GreyBaseMap_id,Chromosome_id,Chromosome_Num, Chromosome_Adjust,Chromosome_Status ,Chromosome_count,Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree
+		from INF_Chromosome
+		where GreyBaseMap_id=#{id}
+		and Chromosome_Opera=0
+		and Chromosome_Mark=0
+		and Chromosome_DeleteStatus=0
+		ORDER BY Chromosome_Num,OrderBy_Num DESC,Chromosome_id
+	</select>
+	<!-- 查询灰底图的核对状态 -->
+	<select id="chromAncheckQuery" resultType="boolean">
+		select GreyBaseMap_AnalyCheck
+		from INF_GreyBaseMap
+		where GreyBaseMap_id = #{greyid}
+	</select>
+	
+	<!-- 染色体移动  修改上下高低，排序编号-->
+	<update id="chAlternate">
+		update INF_Chromosome c
+		<if test="num==''">
+			set c.Chromosome_Status=1
+		</if>
+		<if test="num!=''">
+			set c.Chromosome_Num=#{num},c.Chromosome_Status=0
+		</if>
+		where c.Chromosome_id=#{chromId};
+	</update>
+	<!-- *******染色体交替*** -->
+	<!-- 染色体查询 -->
+	<resultMap type="org.zixing.dto.ChromSwopQuery" id="chromquery">
+		<result property="chromId" column="Chromosome_id"/>
+		<result column="GreyBaseMap_id"  property="greyid"/>
+		<result column="Chromosome_Num"  property="chromNum"/>
+		<result column="Chromosome_count"  property="chromCount"/>
+		<result column="Chromosome_Status"  property="chromStatus"/>
+		<result column="Chromosome_Path"  property="pathUrl"/>
+		<result column="Chromosome_Adjust"  property="adjustUrl"/>
+		<result column="Chromosome_Enhance"  property="enhanceUrl"/>
+		<result column="Chromosome_Mark"  property="chromMark"/>
+		<result column="Arith_Offset"  property="outlineNumber"/>
+		<result column="Arith_OffsetPic"  property="outlineUrl"/>
+		<result column="Logs_id"  property="logsId"/>
+		<result column="Chromosome_Father"  property="fatherId"/>
+		<result column="Chromosome_Offset"  property="offset"/>
+		<result column="Chromosome_Opera"  property="opera"/>
+		<result column="Chromosome_AfterConPic"  property="afterConPic"/>
+		<result column="Chromosome_Steps"  property="steps"/>
+		<result column="Chromosome_AnStatus"  property="anStatus"/>
+		<result column="Chromosome_Circumgyrate"  property="circumgyrate"/>
+		<result column="Chromosome_Mirror"  property="mirror"/>
+		<result column="Chromosome_CircumXdegree"  property="circumXdegree"/>
+		<result column="Arith_OffsetPicAna"  property="offsetPicAna"/>
+		<result property="orderByNum" column="OrderBy_Num"/>
+		<result property="topDown" column="TopDown"/>
+	</resultMap>
+	<select id="chromQuerys" resultMap="chromquery">
+		select GreyBaseMap_id,Chromosome_Num,Chromosome_count,Chromosome_Status,Chromosome_Path,
+		Chromosome_Adjust,Chromosome_Enhance,Chromosome_Mark,Arith_Offset,Arith_OffsetPic,Logs_id,Chromosome_Father,
+		Chromosome_Offset,Chromosome_Opera,Chromosome_AfterConPic,Chromosome_Steps,Chromosome_AnStatus,
+		 Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree,Arith_OffsetPicAna,OrderBy_Num,TopDown
+		from INF_Chromosome
+		where Chromosome_id=#{id}
+	</select>
+	
+	<!-- 删除染色体 -->
+	<delete id="chromDelete">
+		delete from INF_Chromosome
+		where Chromosome_id in
+		<foreach collection="list" item="item" index= "index" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<!-- 染色体新增 -->
+	<insert id="chromInsert">
+		insert into INF_Chromosome(GreyBaseMap_id,Chromosome_Num,Chromosome_count,Chromosome_Status,Chromosome_Path,
+		Chromosome_Adjust,Chromosome_Enhance,Chromosome_Mark,Arith_Offset,Arith_OffsetPic,Logs_id,Chromosome_Father,
+		Chromosome_Offset,Chromosome_Opera,Chromosome_AfterConPic,Chromosome_Steps,Chromosome_AnStatus,
+		 Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree,Arith_OffsetPicAna,OrderBy_Num,TopDown)
+		values
+    	<foreach collection="list" item="item" index= "index" separator =",">
+    		(
+    			#{item.greyid},
+    			#{item.chromNum},
+    			#{item.chromCount},
+    			#{item.chromStatus},
+    			#{item.pathUrl},
+    			#{item.adjustUrl},
+    			#{item.enhanceUrl},
+    			#{item.chromMark},
+    			#{item.outlineNumber},
+    			#{item.outlineUrl},
+    			#{item.logsId},
+    			#{item.fatherId},
+    			#{item.offset},
+    			#{item.opera},
+    			#{item.afterConPic},
+    			#{item.steps},
+    			#{item.anStatus},
+    			#{item.circumgyrate},
+    			#{item.mirror},
+    			#{item.circumXdegree},
+    			#{item.offsetPicAna},
+    			#{item.orderByNum},
+    			#{item.topDown}
+    		)
+    	</foreach>
+	</insert>
+	
+	<!-- 染色体存图并返回id -->
+	<insert id="chromInsertQuery" parameterType="org.zixing.dto.ChromSwopQuery">
+		<selectKey keyColumn="Chromosome_id" keyProperty="chromId" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into INF_Chromosome(GreyBaseMap_id,Chromosome_Num,Chromosome_count,Chromosome_Status,Chromosome_Path,
+		Chromosome_Adjust,Chromosome_Enhance,Chromosome_Mark,Arith_Offset,Arith_OffsetPic,Logs_id,Chromosome_Father,
+		Chromosome_Offset,Chromosome_Opera,Chromosome_AfterConPic,Chromosome_Steps,Chromosome_AnStatus,
+		 Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree,Arith_OffsetPicAna,OrderBy_Num,TopDown)
+		value (#{greyid},#{chromNum},#{chromCount},#{chromStatus},#{pathUrl},#{adjustUrl},#{enhanceUrl},#{chromMark},
+		#{outlineNumber},#{outlineUrl},#{logsId},#{fatherId},#{offset},#{opera},#{afterConPic},#{steps},#{anStatus},
+		#{circumgyrate},#{mirror},#{circumXdegree},#{offsetPicAna},#{orderByNum},#{topDown})
+	</insert>
+	
+	<update id="chromUpdate">
+	  update INF_Chromosome
+	  set GreyBaseMap_id=#{chrom.greyid},
+		Chromosome_Num=#{chrom.chromNum},
+		Chromosome_count=#{chrom.chromCount},
+		Chromosome_Status=#{chrom.chromStatus},
+		Chromosome_Path=#{chrom.pathUrl},  
+		Chromosome_Adjust=#{chrom.adjustUrl},
+		Chromosome_Enhance=#{chrom.enhanceUrl},
+		Chromosome_Mark=#{chrom.chromMark},
+		Arith_Offset=#{chrom.outlineNumber},
+		Arith_OffsetPic=#{chrom.outlineUrl},
+		Logs_id=#{chrom.logsId},
+		Chromosome_Father=#{chrom.fatherId},
+		Chromosome_Offset=#{chrom.offset},
+		Chromosome_Opera=#{chrom.opera},	
+		Chromosome_AfterConPic=#{chrom.afterConPic},
+		Chromosome_Steps=#{chrom.steps},
+		Chromosome_AnStatus=#{chrom.anStatus},
+		Chromosome_Circumgyrate=#{chrom.circumgyrate},
+		Chromosome_Mirror=#{chrom.mirror},
+		Chromosome_CircumXdegree=#{chrom.circumXdegree},
+		Arith_OffsetPicAna=#{chrom.offsetPicAna},
+		OrderBy_Num=#{chrom.orderByNum},
+		TopDown=#{chrom.topDown}	
+	  where
+		Chromosome_id=#{chrom.chromId}
+	</update>
+	<!-- 查询染色体核型 -->
+	<select id="KaryotypeQuery" resultType="String">
+		select count(Chromosome_Num)
+		from INF_Chromosome c
+		where c.Chromosome_Mark=0
+		and c.Chromosome_Opera=0
+		and c.Chromosome_DeleteStatus=0
+		and c.GreyBaseMap_id=#{grayid}
+		<choose>
+			<when test='state=="common"'>and c.Chromosome_Num &gt;=1 and c.Chromosome_Num &lt;= 25</when>
+			<when test='state=="x"'>and c.Chromosome_Num=23</when>
+			<when test='state=="y"'>and c.Chromosome_Num=24</when>
+		</choose>
+	</select> 
+	<!-- 染色体复制粘贴的查询显示功能 -->
+	<select id="chCopyQuery" resultMap="chromquery">
+		<!-- select Chromosome_id,Chromosome_Num, Chromosome_Adjust,Chromosome_Status,Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree
+		from INF_Chromosome
+		where GreyBaseMap_id=#{greyId}
+		and Chromosome_Opera=0
+		and Chromosome_Mark=0
+		<choose>
+			<when test="mark!='' and mark!='an' and mark!='chromAbnormal'">and Chromosome_Num=#{mark} and Chromosome_Status=0</when>
+			<when test="mark=='an'">and Chromosome_Num='25' and Chromosome_Status=0</when>
+			<when test="mark=='chromAbnormal'">and Chromosome_Status=1</when>
+		</choose>
+		ORDER BY Chromosome_id desc; -->
+		select OrderBy_Num,TopDown,Chromosome_id,Chromosome_Num, Chromosome_Adjust,Chromosome_Status,Chromosome_Circumgyrate,Chromosome_Mirror,Chromosome_CircumXdegree
+		from INF_Chromosome
+		where GreyBaseMap_id=#{greyId}
+		and Chromosome_Opera=0
+		and Chromosome_Mark=0
+		and Chromosome_DeleteStatus=0
+		<choose>
+			<when test="mark!='' and mark!='an' and mark!='chromAbnormal'">and Chromosome_Num=#{mark} and Chromosome_Status=0</when>
+			<when test="mark=='an'">and Chromosome_Num='25' and Chromosome_Status=0</when>
+			<when test="mark=='chromAbnormal'">and Chromosome_Status=1</when>
+		</choose>
+		
+		ORDER BY Chromosome_Num,OrderBy_Num DESC,Chromosome_id
+	</select>
+	
+	<!-- 染色体核型一览初始化 -->
+	<select id = "caryviewQuery" resultMap="chAnalyq">
+		SELECT  c.Chromosome_id,c.Chromosome_Num, c.Chromosome_Adjust,g.GreyBaseMap_id,d.DialPiece_Num,g.GreyBaseMap_Num,c.Chromosome_Circumgyrate,c.Chromosome_Mirror,Chromosome_CircumXdegree
+		from INF_Chromosome c
+		LEFT JOIN INF_GreyBaseMap g on g.GreyBaseMap_id=c.GreyBaseMap_id
+		LEFT JOIN INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on  e.Num_id = d.Num_id
+		WHERE e.Event_id=#{inid}
+		and c.Chromosome_Opera=0
+		and c.Chromosome_Adjust!='' 
+		and c.Chromosome_Adjust is not null
+		and c.Chromosome_Status=0
+		and c.Chromosome_Mark=0
+		and c.Chromosome_DeleteStatus=0
+		and c.Chromosome_Num=#{chromNum}
+		 order by d.DialPiece_Num asc,g.GreyBaseMap_Num asc
+	</select>
+
+	<!-- 分析页面确定按钮把截图保存到本地并将路径保存到数据库中 -->
+	<update id = "chromConfirmOneSave">
+		update INF_GreyBaseMap
+		set 
+		<if test="status">
+			GreyBaseMap_AllChromosomeBaby = #{path}
+		</if>	
+		<if test="!status">
+			GreyBaseMap_AllChromosome = #{path}
+		</if>
+		where GreyBaseMap_id = #{greyId}
+	</update>
+	
+	<!--分析点确定更新分析核对的状态-->
+	<update id = "chromAncheckupdate">
+		update INF_GreyBaseMap
+		set GreyBaseMap_AnalyCheck = 1
+		where GreyBaseMap_id = #{greyId}
+	</update>
+	
+	<!-- 分割页面返回按钮把截图保存到本地并将路径保存到数据库中 -->
+	<update id = "chromConfirmTwoSave">
+		update INF_GreyBaseMap
+		set GreyBaseMap_CutOriPic = #{path}
+		where  GreyBaseMap_id = #{gradId}
+	</update>
+	<!-- 查询玻片下所有染色体截图的路径 -->
+	<select id="chromPicQuery" resultMap="chAnalyq">
+		SELECT g.GreyBaseMap_id, g.GreyBaseMap_AllChromosome ,d.ToSystem_Date, e.Event_id,d.DialPiece_Num,g.GreyBaseMap_Num,g.Arith_Karyotype,g.GreyBaseMap_PathShe,g.GreyBaseMap_PathOut
+		from INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		where e.Event_id = #{inName} AND GreyBaseMap_AnalyStatus = 1 AND g.GreyBaseMap_AllChromosome IS not NULL
+		order by GreyBaseMap_Num ASC
+	</select>
+	
+	<!-- 查询单个染色体截图的路径 -->
+	<select id="chromSinglePicQuery" resultMap="chAnalyq">
+		SELECT 
+		<if test="report==4">
+		GreyBaseMap_AllChromosomeBaby,GreyBaseMap_BabyPic
+		</if>
+		<if test="report!=4">
+		GreyBaseMap_AllChromosome,GreyBaseMap_CutOriPic
+		</if>
+		from INF_GreyBaseMap
+		where GreyBaseMap_id = #{greyId}
+	</select>
+
+	<!-- 查询原始灰底图 -->
+	<select id="greyPictureQuery" resultType="String">
+		select g.GreyBaseMap_PathShe
+		from INF_GreyBaseMap g
+		where g.GreyBaseMap_id=#{greyid};
+	</select>
+	<!-- 确定更新核型 -->
+	<update id="chromKaryotype">
+		update INF_GreyBaseMap SET Arith_Karyotype = #{kary},Arith_Total = #{kary1},GreyBaseMap_AnalyCheck=1
+		where GreyBaseMap_id = #{greyId}
+	</update>  
+	<!-- 分析页面中镜像的样式保存 -->
+	<update id="chScacssSave">
+		update INF_Chromosome set Chromosome_Mirror = #{scacss} , Chromosome_CircumXdegree = ""
+		where Chromosome_id = #{id}
+	</update>
+	<!-- 分析页面中旋转180的样式保存 -->
+	<update id="chRotcssSave">
+		update INF_Chromosome set Chromosome_Circumgyrate = #{rotcss} , Chromosome_CircumXdegree = ""
+		where Chromosome_id = #{id}
+	</update>
+	<!-- 分析页面中旋转X度的样式保存 -->
+	<update id="chCircumXSave">
+		update INF_Chromosome set Chromosome_CircumXdegree = #{circumX}
+		where Chromosome_id = #{chromId}
+	</update>
+	
+	<!-- 分析中镜像的样式查询 -->
+	<select id="chScacssQuery" resultType="String">
+		select Chromosome_Mirror
+		from INF_Chromosome
+		where Chromosome_id = #{chromId}
+	</select>
+	
+	<!-- 分析中旋转180的样式查询 -->
+	<select id="chRotcssQuery" resultType="String">
+		select Chromosome_Circumgyrate
+		from INF_Chromosome
+		where Chromosome_id = #{chromId}
+	</select>
+	<!-- 查询分割页面中灰底图的样式 -->
+	<select id="grayStyleQuery" resultType="String">
+		select Chromosome_style
+		from INF_GreyBaseMap_Status
+		where Chrom_id = #{chromId}
+	</select>
+	<!-- 更新全局染色体的样式 -->
+	<update id="chromExcisionStatusUpdate">
+		update INF_GreyBaseMap_Status
+		set Chromosome_style = #{chromStyle}
+		where Chrom_id = #{chromId}
+	</update>
+	<!-- 插入全局染色体样式 -->
+	<insert id="chromExcisionStatusInset" parameterType="org.zixing.entity.GrayBaseMapStatus">
+		insert into INF_GreyBaseMap_Status(GreyBaseMap_id,Chrom_id,Chromosome_style) 
+		values(#{greyId},#{chromId},#{chromStyle})
+	</insert>
+	<!-- 查询全局染色体样式 -->
+	<select id="grayStatusList" resultMap="grayStatus">
+		select g.Chrom_id,g.Chromosome_style,c.Chromosome_Enhance
+		from INF_GreyBaseMap_Status g
+		LEFT JOIN INF_Chromosome c ON c.Chromosome_id = g.Chrom_id
+		where g.GreyBaseMap_id = #{greyId}
+	</select>
+	
+	
+	<!-- 染色体 修改上下高低-->
+	<update id="chAlter">
+		update INF_Chromosome c
+		set c.topDown=#{topDown}
+		where c.Chromosome_id=#{chromId};
+	</update>
+	
+	<!-- 查询排序编号 -->
+	<select id="chAlterSortNumberQuery" resultMap="chromquery">
+		select Chromosome_id, OrderBy_Num , Chromosome_Num
+		from INF_Chromosome 
+		where Chromosome_id =#{chromId}
+	</select>
+	
+	<!-- 染色体 修改排序编号-->
+	<update id="chAlterSortNumber" parameterType="java.util.List"> 
+		<foreach collection="list" item="item" index="index" open="" close=";" separator=";"> 
+		update INF_Chromosome set OrderBy_Num=#{item.orderByNum} where Chromosome_id=#{item.chromId}
+	    </foreach> 
+	</update>
+	
+	<!-- 羊水报告带出胎儿图片 -->
+	<select id="BabyPicOut" resultType="String">
+	   select GreyBaseMap_BabyPic from INF_GreyBaseMap where GreyBaseMap_id=#{greyId}
+	</select>
+	
+	<!-- 分析确定按钮同步更新核型 -->
+    <select id="confirmUpdate">
+       UPDATE INF_Event SET Card_Caryogram=#{caryogram} WHERE Event_id=#{event}
+    </select>
+    
+    <!-- 分析分割页面跳转计数核对页面 -->
+    <select id = "analyToCount" resultType="String">
+        SELECT GreyBaseMap_id
+        FROM INF_GreyBaseMap g
+        LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+        LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id = #{eventId} AND g.GreyBaseMap_Num = #{greyNum} AND d.DialPiece_Num=#{dialPiece}
+	AND g.GreyBaseMap_AnalyStatus=1 AND g.GreyBaseMap_CountStatus=1
+    </select>
+    
+    <!-- 根据id查询摆正图 -->
+    <select id = "chAdjustQuery" resultType="String">
+    	select  Chromosome_Adjust
+    	from INF_Chromosome
+    	where Chromosome_id=#{chromId}
+    </select>
+  	
+   	<!-- 存储摆正图 -->
+   	<update id = "chAdjustUpdate">
+   		update INF_Chromosome 
+   		set Chromosome_Adjust=#{url},
+   		Chromosome_Circumgyrate=null,
+   		Chromosome_Mirror=null,
+   		Chromosome_CircumXdegree=null,
+   		TopDown=0
+   		where Chromosome_id=#{chromId}
+   	</update>
+    
+</mapper>

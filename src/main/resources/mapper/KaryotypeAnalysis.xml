@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.KaryotypeAnalysisDao">
+	<!-- 事件核对状态查询 -->
+	<resultMap type="org.zixing.dto.IncidentCheck" id="incheck">
+		<result property="inName" column="Event_id" />
+		<result property="inCheck" column="Check_Status" javaType="BOOLEAN"
+			jdbcType="TINYINT" />
+		<result property="status" column="DialPiece_OperaStatus"
+			javaType="BOOLEAN" jdbcType="TINYINT" />
+
+		<result property="analyStatusSum" column="AnalyStatus" />
+		<result property="countStatusSum" column="CountStatus" />
+		<result property="analyCheck" column="AnalyCheck" />
+		<result property="countCheck" column="CountCheck" />
+		<!--<result property="count" column="allCount"/>-->
+        <collection property="count" select="queryGreyBaseMapCountByEventId" column="Event_id" />
+	</resultMap>
+	<!--11-7新界面接口-->
+	<select id="incidentQuery" resultMap="incheck">
+		SELECT DISTINCT e.Event_id ,d.DialPiece_OperaStatus,e.Check_Status
+		,SUM(g.GreyBaseMap_AnalyStatus) AnalyStatus,SUM(g.GreyBaseMap_AnalyCheck) AnalyCheck
+		,SUM(g.GreyBaseMap_CountStatus) CountStatus,SUM(g.GreyBaseMap_CountCheck) CountCheck
+		FROM INF_Event e
+		JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+		JOIN INF_GreyBaseMap g ON g.DialPiece_id = d.DialPiece_id
+		WHERE
+		d.`DialPiece_id` in ( select `DialPiece_id` from `INF_task` t where t.`DialPiece_id`=d.`DialPiece_id`)
+		<if test='incheck==1 and inName==""'>
+			and e.Check_Status=0
+		</if>
+		<if test='incheck==1 and inName!=""'>
+			and e.Check_Status=0 and e.Event_id like concat('%',#{inName},'%')
+		</if>
+		<if test='incheck==2 and inName==""'>
+			and e.Check_Status=1
+		</if>
+		<if test='incheck==2 and inName!=""'>
+			and e.Check_Status=1 and e.Event_id like concat('%',#{inName},'%')
+		</if>
+		<if test='incheck==0 and inName!=""'>
+			and e.Event_id like concat('%',#{inName},'%')
+		</if>
+		
+	<!-- 	<if test='date!=""'>
+			and d.ToSystem_Date &gt;= #{date,jdbcType=DATE}
+		</if>
+		
+		<if test='endDate!=""'>
+			and d.ToSystem_Date  &lt;= #{endDate,jdbcType=DATE}
+		</if> -->
+		
+		<if test='date!=""'>
+            and `Event_id` in (SELECT Submit_EventName FROM (SELECT Submit_EventName,MAX(create_date) date1 FROM INF_Task_Grey GROUP BY Submit_EventName) AS a  WHERE a.date1 &gt; #{date,jdbcType=DATE})
+        </if>
+    
+        <if test='endDate!=""'>
+            and `Event_id` in (SELECT Submit_EventName FROM (SELECT Submit_EventName,MAX(create_date) date1 FROM INF_Task_Grey GROUP BY Submit_EventName) AS a  WHERE a.date1 &lt; #{endDate,jdbcType=DATE})
+        </if>
+		
+		<if test='incheck==3'>
+			and e.Card_Caryogram like concat('%',#{inName},'%')
+		</if>
+		<if test='incheck==4 and inName!=""'>
+			and e.Card_MA=#{inName}
+		</if>
+		AND (e.Num_id,d.DialPiece_OperaStatus) IN (
+		SELECT e.Num_id,MAX(d.DialPiece_OperaStatus)
+		FROM INF_Event e
+		LEFT JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+		GROUP BY e.Num_id
+		ORDER BY e.Num_id ASC
+		)
+		GROUP BY
+		e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram
+		ORDER
+		BY e.Event_id ASC,d.DialPiece_OperaStatus DESC
+	</select>
+	<!-- 根据事件ID获取所选的分析，计数总数-->
+	<select id="queryGreyBaseMapCountByEventId" resultType="int">
+		SELECT COUNT(g.GreyBaseMap_id)
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		WHERE e.Event_id= #{0} AND g.Status = 1
+	</select>
+
+
+	<select id="queryEventPlectrum" resultType="org.zixing.dto.SlideQuery">
+		SELECT d.DialPiece_id slideId,d.DialPiece_Num slideName,e.Event_id inName,
+		count(g.GreyBaseMap_id) count
+		FROM INF_GreyBaseMap g LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		WHERE e.Event_id= #{0}
+		AND g.`Status`=1
+		<!--AND GreyBaseMap_PathShe IS NOT NULL
+		AND (g.GreyBaseMap_CountStatus = 1 or g.GreyBaseMap_AnalyStatus = 1)
+		-->
+		GROUP BY d.DialPiece_Num,d.DialPiece_id
+	</select>
+
+
+
+
+	<resultMap type="org.zixing.dto.GreyBaseMap" id="GreyBaseMapByEventIdOrPlectrumName">
+		<result property="grayId" column="GreyBaseMap_id" />
+		<result property="inName" column="Event_id" />
+		<result property="slideName" column="DialPiece_Num" />
+		<result property="grayNumber" column="GreyBaseMap_Num" />
+		<result property="grayUrl" column="GreyBaseMap_PathShe" />
+		<result property="greyBaseMapAllChromosome" column="GreyBaseMap_AllChromosome" />
+		<result property="grayDate" column="ToSystem_Date" javaType="String"
+				jdbcType="DATE" />
+		<result property="grayCray" column="Arith_Karyotype" />
+		<result property="analyCheck" column="GreyBaseMap_AnalyCheck" javaType="boolean"/>
+		<result property="countCheck" column="GreyBaseMap_CountCheck" javaType="boolean"/>
+		<result property="printReport" column="GreyBaseMap_PDFTag" javaType="boolean"/>
+		<result property="greyBaseMapTag" column="GreyBaseMap_Tag"/>
+	</resultMap>
+	<select id="queryGreyBaseMapByEventIdOrPlectrumName" resultMap="GreyBaseMapByEventIdOrPlectrumName">
+		SELECT
+		g.GreyBaseMap_Tag,g.GreyBaseMap_id,e.Event_id,d.DialPiece_Num,g.GreyBaseMap_PathShe,g.`GreyBaseMap_AllChromosome`,
+		d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_PDFTag,
+		g.Arith_Karyotype,g.GreyBaseMap_AnalyCheck,g.GreyBaseMap_CountCheck
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON g.DialPiece_id = d.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		LEFT JOIN INF_Chromosome c ON c.GreyBaseMap_id = g.GreyBaseMap_id
+		WHERE
+		g.GreyBaseMap_id in ( SELECT GreyBaseMap_id FROM `INF_Task_Grey` tg WHERE tg.`Status`=1 AND type=1 AND `GreyBaseMap_id`=g.GreyBaseMap_id )
+		<if test="inName!=null and inName!=''">
+			AND e.Event_id= #{inName}
+		</if>
+		<if test="plectrumName!=null and plectrumName!=''">
+			AND d.DialPiece_id = #{plectrumName}
+		</if>
+		AND g.`Status`=1 AND (g.`GreyBaseMap_AIAnalyStatus`=1 or GreyBaseMap_AnalyStatus =1)
+		<!--AND GreyBaseMap_AnalyStatus =1
+		AND GreyBaseMap_PathShe IS NOT NULL-->
+		<!-- AND g.Status=1 -->
+		GROUP BY
+		GreyBaseMap_id,Event_id,GreyBaseMap_PathShe,ToSystem_Date,GreyBaseMap_Num,g.Arith_Karyotype,g.GreyBaseMap_AnalyCheck
+		ORDER BY g.`GreyBaseMap_AnalyCheck` DESC, g.`GreyBaseMap_Num` ASC
+		/*ORDER BY g.`GreyBaseMap_AllChromosome` desc ,d.DialPiece_Num,g.GreyBaseMap_Num ASC*/
+	</select>
+
+
+
+	<resultMap type="org.zixing.dto.IncidentCheck" id="EventInfo">
+		<result property="inName" column="Event_id" />
+		<result property="inCheck" column="Check_Status" javaType="BOOLEAN"
+				jdbcType="TINYINT" />
+		<result property="status" column="DialPiece_OperaStatus"
+				javaType="BOOLEAN" jdbcType="TINYINT" />
+		<result property="analyStatusSum" column="AnalyStatus" />
+		<result property="countStatusSum" column="CountStatus" />
+		<result property="analyCheck" column="AnalyCheck" />
+		<!--<result property="countCheck" column="CountCheck" />-->
+		<result property="cardName" column="Card_Name" />
+		<result property="cardSex" column="Card_Sex" />
+		<result property="caryogram" column="LastUpdateCaryogram" />
+		<collection property="countCheck" javaType="java.lang.String"
+					select="org.zixing.dao.CrayAnalysisDao.querysAnalyzeCount" column="Event_id" />
+	</resultMap>
+	<select id="queryEventInfo" resultMap="EventInfo">
+		SELECT DISTINCT e.Event_id ,e.Card_Name,e.Card_Sex,e.LastUpdateCaryogram,e.Check_Status,
+		SUM(g.GreyBaseMap_AnalyStatus) AnalyStatus,SUM(g.GreyBaseMap_CountStatus) CountStatus
+		,SUM(g.GreyBaseMap_AnalyCheck) AnalyCheck,SUM(g.GreyBaseMap_CountCheck) CountCheck
+		FROM INF_Event e
+		JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+		JOIN
+		INF_GreyBaseMap g ON g.DialPiece_id = d.DialPiece_id
+		WHERE
+		e.Event_id = #{0}
+		AND g.Status=1
+		GROUP BY
+		e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram,e.Card_Name,e.Card_Sex ,e.LastUpdateCaryogram
+		ORDER
+		BY e.Event_id ASC
+		<!--AND g.`Arith_Karyotype` IS NOT NULL-->
+		<!--SELECT DISTINCT e.Event_id ,e.Card_Name,e.Card_Sex,e.LastUpdateCaryogram,e.LastUpdateCaryogram,
+		e.Check_Status,d.DialPiece_OperaStatus,SUM(g.GreyBaseMap_AnalyStatus)
+		AnalyStatus,SUM(g.GreyBaseMap_CountStatus) CountStatus
+		,SUM(g.GreyBaseMap_AnalyCheck)
+		AnalyCheck,SUM(g.GreyBaseMap_CountCheck) CountCheck
+		FROM INF_Event e
+		JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+		JOIN
+		INF_GreyBaseMap g ON g.DialPiece_id = d.DialPiece_id
+		WHERE 1=1 &lt;!&ndash;d.Submit_Status=1&ndash;&gt;
+		AND e.Event_id = #{0}
+		AND (e.Num_id,d.DialPiece_OperaStatus) IN (
+		SELECT e.Num_id,MAX(d.DialPiece_OperaStatus)
+		FROM INF_Event e
+		LEFT JOIN INF_DialPiece d ON d.Num_id = e.Num_id
+		GROUP BY e.Num_id
+		ORDER BY e.Num_id ASC
+		)
+		GROUP BY
+		e.Event_id,e.Check_Status,DialPiece_OperaStatus,e.Card_Caryogram,e.Card_Name,e.Card_Sex ,e.LastUpdateCaryogram
+		ORDER
+		BY e.Event_id ASC,d.DialPiece_OperaStatus DESC-->
+	</select>
+	
+	<select id="findGreyBaseMapCount">
+
+	</select>
+</mapper>

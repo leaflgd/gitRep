@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChCountDao">
+	<!-- 染色单体标签 -->
+	<resultMap type="org.zixing.dto.ChromLabel" id="labels">
+		<result property="inName" column="Event_id" />
+		<result property="slideName" column="DialPiece_Num" />
+		<result property="grayNumber" column="GreyBaseMap_Num" />
+		<result property="chromCount" column="Arith_Total" />
+		<result property="chromRemake" column="Arith_Total_Final" />
+		<result property="grayUrl" column="GreyBaseMap_PathShe" />
+		<result property="grayUrlOut" column="GreyBaseMap_PathShe" />
+		<result property="arithOffset" column="GreyBaseMap_PathOut" />
+		<result property="toSystemDate" column="ToSystem_Date" />
+		<result property="chBabyPic" column="GreyBaseMap_BabyPic" />
+	</resultMap>
+
+	<!-- 染色体标签查询 -->
+	<select id="chromLabelQuerys" resultMap="labels">
+		select d.ToSystem_Date,
+		e.Event_id,d.DialPiece_Num,g.GreyBaseMap_Num,g.Arith_Total,g.Arith_Total_Final,g.GreyBaseMap_PathShe,g.GreyBaseMap_PathOut,g.GreyBaseMap_PathShe,g.GreyBaseMap_BabyPic
+		from INF_GreyBaseMap g
+		left join INF_DialPiece d on g.DialPiece_id =
+		d.DialPiece_id
+		left join INF_Event e on d.Num_id = e.Num_id
+		where
+		g.GreyBaseMap_id=#{grayid};
+	</select>
+
+	<!-- 根据截图查询染色体信息 -->
+	<select id="chromAllPicQuerys" resultMap="labels">
+		select d.ToSystem_Date,
+		e.Event_id,d.DialPiece_Num,g.GreyBaseMap_Num,g.Arith_Total,g.Arith_Total_Final,g.GreyBaseMap_PathShe,g.GreyBaseMap_PathOut,g.GreyBaseMap_PathShe
+		from INF_GreyBaseMap g
+		left join INF_DialPiece d on g.DialPiece_id =
+		d.DialPiece_id
+		left join INF_Event e on d.Num_id = e.Num_id
+		where
+		g.GreyBaseMap_AllChromosome=#{chAllpic};
+	</select>
+
+	<resultMap type="org.zixing.dto.ChromQuery" id="chromq">
+		<result property="chromId" column="Chromosome_id" />
+		<result property="chromUrl" column="Chromosome_Enhance" />
+		<result property="chromNum" column="Chromosome_count" />
+		<result property="chPath" column="Chromosome_Path" />
+	</resultMap>
+
+	<!-- 单个染色体查询 -->
+	<select id="singleChromQuery" resultMap="chromq">
+		select
+		Chromosome_id,Chromosome_Enhance,Chromosome_count,Chromosome_Path
+		from INF_Chromosome
+		where GreyBaseMap_id=#{grayid} 
+		and Arith_OffsetPic is not null 
+		and Chromosome_Mark=1
+		order by Chromosome_count desc;
+	</select>
+
+	<!-- 计数页面上下页的greyid查询 -->
+    <select id = "CountGreyIdQuery" resultType="String">
+        SELECT g.GreyBaseMap_id
+        FROM INF_GreyBaseMap g
+        LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+        LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id = #{inName}
+        AND g.GreyBaseMap_CountStatus=1
+        <if test="status">
+        	AND g.GreyBaseMap_id &gt; #{greyid}
+        	order by g.GreyBaseMap_id asc limit 1
+        </if>
+        <if test="!status">
+        	AND g.GreyBaseMap_id &lt; #{greyid}
+        	order by g.GreyBaseMap_id desc limit 1
+        </if>
+    </select>
+
+	<!-- 修改染色体的数量及备注和查看状态 -->
+	<update id="chromNumberAndRemakesUpdate">
+		update INF_GreyBaseMap
+		set Arith_Total =
+		#{chromCount},Arith_Total_Final = #{remakes},GreyBaseMap_CountCheck = 1
+		where GreyBaseMap_id=#{grayid};
+	</update>
+	
+	<!-- 修改单个染色体的数目同时修改染色体数量 -->
+	<update id="chromNumberUpdate">
+		update INF_GreyBaseMap
+		set Arith_Total =#{chromCount}
+		where GreyBaseMap_id=#{grayid};
+	</update>
+
+	<!-- 根据单染色体id查询对应的轮廓图 -->
+	<select id="singleChromToLine" resultType="String">
+		select Arith_OffsetPic
+		from testDNA.INF_Chromosome
+		where Chromosome_id=#{imgId}
+	</select>
+
+	<!-- 文件卡 -->
+	<resultMap type="org.zixing.dto.FolderDate" id="folder">
+		<result property="evenNumber" column="Event_id" />
+		<result property="medicalRecord" column="Card_MedNum" />
+		<result property="name" column="Card_Name" />
+		<result property="age" column="Card_Age" />
+		<result property="sex" column="Card_Sex" />
+		<result property="pregnancy" column="Card_MA" />
+		<result property="pregnancys" column="Card_MAD" />
+		<result property="gatherDate" column="Card_CollDate" javaType="String"
+			jdbcType="DATE" />
+		<result property="vaccinateDate" column="Card_VaccDate"
+			javaType="String" jdbcType="DATE" />
+		<result property="diagnose" column="Card_ClinDiag" />
+		<result property="suggestion" column="Card_Opinion" />
+		<result property="caryogram" column="Card_Caryogram" />
+		<result property="specimenSource" column="Card_SampleSource" />
+		<result property="theProducers" column="Card_Producer" />
+		<result property="putAsealOn" column="Card_ViewandPrinter" />
+		<result property="examineAndNucleus" column="Card_Checker" />
+		<result property="examineAndVerify" column="Card_Auditor" />
+		<result property="reportDate" column="Card_ReportDate"
+			javaType="String" jdbcType="DATE" />
+		<result property="check" column="Card_Check" />
+		<result property="whole" column="Card_Total" />
+		<result property="cardOpinionStatus" column="Card_OpinionStatus" />
+	</resultMap>
+
+	<select id="foldeQuery" resultMap="folder">
+		select Event_id,
+		Card_SampleSource,Card_MedNum,Card_Name,Card_Age,Card_Sex,Card_MA,Card_MAD,Card_CollDate,Card_VaccDate,
+		Card_ClinDiag,Card_Opinion,Card_Producer,Card_ViewandPrinter,Card_Checker,Card_Auditor,
+		Card_ReportDate,Card_Check,Card_Total,Card_Caryogram,Card_OpinionStatus
+		from INF_Event
+		where Event_id = #{inName}
+
+	</select>
+
+	<update id="updateFolder">
+		update INF_Event
+		set Card_MedNum =#{folder.medicalRecord},
+		Card_Name = #{folder.name},
+		Card_Age=#{folder.age},
+		Card_Sex= #{folder.sex},
+		Card_MA=#{folder.pregnancy},
+		Card_MAD=#{folder.pregnancys},
+		<if test="folder.gatherDate==''">
+			Card_CollDate= null,
+		</if>
+		<if test="folder.gatherDate!=''">
+			Card_CollDate= #{folder.gatherDate,jdbcType=DATE,javaType=String},
+		</if>
+		<if test="folder.vaccinateDate==''">
+			Card_VaccDate= null,
+		</if>
+		<if test="folder.vaccinateDate!=''">
+			Card_VaccDate=#{folder.vaccinateDate,jdbcType=DATE,javaType=String},
+		</if>
+		
+		Card_ClinDiag=#{folder.diagnose},
+		Card_Opinion= #{folder.suggestion},
+		Card_Caryogram=#{folder.caryogram},
+		Card_SampleSource= #{folder.specimenSource},
+		Card_Producer= #{folder.theProducers},
+		Card_ViewandPrinter=#{folder.putAsealOn},
+		Card_Checker=#{folder.examineAndNucleus},
+		Card_Auditor= #{folder.examineAndVerify},
+		<if test="folder.reportDate==''">
+			Card_ReportDate= null,
+		</if>
+		<if test="folder.reportDate!=''">
+			Card_ReportDate=#{folder.reportDate},
+		</if>
+		Card_Check=#{folder.check},
+		Card_Total= #{folder.whole},
+		Query_CheckStatus=1
+		where Event_id =#{folder.evenNumber};
+	</update>
+
+
+	<update id="chromSingleUpdate">
+		update INF_Chromosome
+		set Chromosome_count =
+		#{chromNum}
+		where Chromosome_id = #{chromId};
+	</update>
+	
+	<!-- 生成报告后改变事件的生成报告状态,最后核型 -->
+	<update id="updateReportstatus">
+		update INF_Event
+		set Check_Status = 1 , LastUpdateCaryogram = #{caryogram}
+		where Event_id = #{inName};
+	</update>
+	
+	<select id="anStatusSum" resultType="Integer">
+		SELECT SUM(g.GreyBaseMap_AnalyStatus) 
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id = #{inName}
+	</select>
+	
+	<select id="countStatusSum" resultType="java.lang.Integer">
+		SELECT SUM(g.GreyBaseMap_CountStatus) 
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id = #{inName} and g.GreyBaseMap_AnalyStatus != 1
+	</select>
+	
+	<select id="anCheckSum" resultType="Integer">
+		SELECT SUM(g.GreyBaseMap_AnalyCheck) 
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id = #{inName}
+	</select>
+	
+	<select id="countCheckSum" resultType="Integer">
+		SELECT SUM(g.GreyBaseMap_CountCheck) 
+		FROM INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id = #{inName}
+	</select>
+	
+	<update id="updateWholes">
+		update INF_Event
+		set Card_Total = #{wholes}
+		where Event_id = #{inName};
+	</update>
+	
+	<select id="queryCheckStatu" resultType="java.lang.String">
+		select Query_CheckStatus
+		from INF_Event
+		where Event_id = #{inName}
+	</select>
+	
+	<select id="arithKaryotypeQuery" resultType="String">
+		select Arith_Karyotype
+		from INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on e.Num_id = d.Num_id
+		where e.Event_id = #{inName} and g.GreyBaseMap_AnalyStatus = 1
+	</select>
+	
+	
+	<update id="updateCaryogram">
+		update INF_Event
+		set Card_Caryogram = #{caryogram}
+		where Event_id = #{inName};
+	</update>
+	
+	<select id = "anStatuThisQuery" resultType="Integer">
+		select GreyBaseMap_AnalyCheck
+		from INF_GreyBaseMap
+		where GreyBaseMap_id = #{greyId}
+	</select>
+	
+	<!-- 根据事件号查询到玻片号 -->
+	<select id = "dialPieceNumFind" resultType="String">
+        SELECT d.DialPiece_id FROM  INF_DialPiece d 
+            LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id = #{greyId} AND d.DialPiece_Num=#{greyNum1}
+    </select>
+    
+    <!-- 将可分析状态更新 -->
+    <select id = "updateStatus1">
+        UPDATE INF_GreyBaseMap SET GreyBaseMap_Tag=1 WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum}
+        
+    </select>
+    
+    <!-- 将可分析状态取消 -->
+    <select id = "updateStatus2">
+        UPDATE INF_GreyBaseMap SET GreyBaseMap_Tag=0 WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum}
+        
+    </select>
+    
+    <!-- 根据玻片号,灰底图编号查询到核型 -->
+    <select id = "caryogramFind" resultType="String">
+        SELECT Arith_Karyotype FROM INF_GreyBaseMap WHERE DialPiece_id=#{DialPieceid} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL
+    </select>
+    
+    <!-- 将计数页面更新的核型更新到GreyBaseMap表中 -->
+    <select id = "updateCaryogram1" >
+        UPDATE INF_GreyBaseMap SET Arith_Total=#{caryogram} WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL;
+        UPDATE INF_GreyBaseMap SET GreyBaseMap_CountCheck=1 WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL;
+    </select>
+    
+    <!-- 将计数页面更新的核型更新到GreyBaseMap表中 -->
+    <!-- <select id = "updateCaryogram2" >
+        UPDATE INF_GreyBaseMap SET Arith_Total_Final=#{caryogram1} WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL;
+    </select> -->
+    <select id = "updateCaryogram2" >
+        UPDATE INF_GreyBaseMap SET Arith_Total_Final=#{caryogram1},GreyBaseMap_CountCheck=1,Arith_Total=#{caryogram} WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL;
+    </select>
+    
+    <!-- 计数核对的数量更新到分析中 -->
+    <select id = "updateCaryogram3" >
+        UPDATE INF_GreyBaseMap SET Arith_Karyotype=#{analyCaryogram} WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum} AND GreyBaseMap_PathsHE IS NOT NULL;
+    </select>
+    
+    <!-- 获取该玻片分析核型 -->
+    <select id = "findCaryogram" resultType="String">
+        SELECT Arith_Karyotype FROM INF_GreyBaseMap WHERE DialPiece_id=#{dialPieceNum} 
+        AND GreyBaseMap_Num=#{greyNum}
+    </select>
+    
+    <!-- 计数右键自动生成报告拿到玻片号slideName -->
+    <select id = "findSlideName" resultType="String">
+        SELECT DialPiece_Num FROM INF_DialPiece WHERE Num_id=(SELECT Num_id FROM INF_Event WHERE Event_id=#{inName})
+    </select>
+    
+    <!-- 分析页面是否可分析 -->
+    <resultMap type="org.zixing.dto.StatusQuery" id="StatusFind">
+       <result property="analyCheck" column="GreyBaseMap_AnalyCheck"/>
+        <result property="countCheck" column="GreyBaseMap_CountCheck"/>
+        <result property="analyStatus" column="GreyBaseMap_AnalyStatus"/>
+        <result property="countStatus" column="GreyBaseMap_CountStatus"/>
+        <result property="checkTag" column="GreyBaseMap_Tag"/>
+    </resultMap>
+
+<select id = "StatusQueryFind" resultMap="StatusFind">
+        SELECT GreyBaseMap_AnalyStatus,GreyBaseMap_CountStatus,GreyBaseMap_AnalyCheck,GreyBaseMap_CountCheck,
+        GreyBaseMap_Tag FROM INF_GreyBaseMap WHERE GreyBaseMap_id=#{grayid}
+    </select>
+    
+    <!-- 分析核对页面点击事件号查询玻片号 -->
+    <select id = "dialPieceNumFind1" resultType="String">
+        SELECT GreyBaseMap_id
+        FROM INF_GreyBaseMap g
+        LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+        LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id = #{eventId} AND g.GreyBaseMap_Num = #{greyNum} AND d.DialPiece_Num=#{dialPiece}
+	AND g.GreyBaseMap_AnalyStatus=1 AND g.GreyBaseMap_CountStatus=1
+    </select>
+    
+    <!-- 分析核对页面点击00X查询玻片号 -->
+    <select id = "dialPieceNumFind2" resultType="String">
+        SELECT GreyBaseMap_id
+        FROM INF_GreyBaseMap g
+        LEFT JOIN INF_DialPiece d ON d.DialPiece_id = g.DialPiece_id
+        LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+        WHERE e.Event_id = #{eventId} AND g.GreyBaseMap_Num = #{greyNum} AND d.DialPiece_Num=#{dialPiece}
+        AND g.GreyBaseMap_CountStatus=1
+    </select>
+    <!-- 文件下拉框 -->
+    <update id="updateFolderList">
+    	update INF_User
+    	set Card_One=#{user.cardOne},
+    	Card_Two=#{user.cardTwo},
+    	Card_Three=#{user.cardThree},
+    	Card_Four=#{user.cardFour},
+    	Card_Five=#{user.cardFive},
+    	Card_Six=#{user.cardSix}
+    	where User_LoginName=#{user.logName}
+    </update>
+ 
+    	<!-- 查询核型和意见 -->
+ 	<select id = 'chOpinionQuery' resultMap="folder">
+ 		select Card_Caryogram,Card_Opinion,Card_MA,Card_MAD,Card_OpinionStatus
+ 		from INF_Event
+ 		where Event_id = #{inName}
+ 	</select>
+    
+    <!-- 查询核型和性别 -->
+    <select id = 'chGenderQuery' resultMap="folder">
+ 		select Card_Caryogram,Card_Sex
+ 		from INF_Event
+ 		where Event_id = #{inName}
+ 	</select>
+ 	
+ 	<!-- 存储指定事件的匹配意见 -->
+ 	<update id="chOpinionStorage">
+    	update INF_Event
+    	set Card_Opinion=#{opin}
+    	where Event_id = #{inName}
+    </update>
+    
+    <!-- 文件卡锁定 -->
+    <update id="CardOpinionStatusUpdate">
+    	update INF_Event
+    	set Card_OpinionStatus=1
+    	where Event_id = #{inName}
+    </update>
+</mapper>
+	
+	

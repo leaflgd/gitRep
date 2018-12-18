@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.SubmitbDao">
+	<resultMap type="org.zixing.dto.SubmitbQuery" id="sumbitbQ">
+		<result column="DialPiece_id" property="dialPieceId"/>
+		<result column="Submit_Status" property="status"/>
+	</resultMap>
+	<!-- 查询算法已处理完的提交事件 -->
+	<select id="submitbQuery" resultMap="sumbitbQ">
+		select DialPiece_id,Submit_Status
+		from INF_Submit
+		where (Submit_Status=2 || Submit_Status=3)
+	</select>
+	<!-- 状态回滚 -->
+	<update id="grayStateRoll">
+		update INF_Submit 
+		set Submit_Status=0
+		where DialPiece_id=#{slideId}
+	</update>
+
+	<!-- 删除么拨片下没有进行操作的染色单体图 -->
+	<delete id="chromDelete">
+		DELETE 
+ 		from INF_Chromosome
+ 		where GreyBaseMap_id in (
+			select g.GreyBaseMap_id
+			from INF_GreyBaseMap g
+			LEFT join INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+			left join INF_Event e on d.Num_id = e.Num_id
+			where d.DialPiece_id=#{slideId}
+ 		)
+
+	</delete>
+
+	<!-- 提交成功修改玻片的时间 -->
+	<update id="submitbDate" >
+		update INF_DialPiece
+		set ToSystem_Date=#{dates ,jdbcType=DATE}
+		where DialPiece_id=#{slideId}
+	</update>
+	
+	<!-- 提交信息处理修改状态 -->
+	<!-- <update id="submitbProcessStatus">
+		update INF_Submit
+		set Submit_CheckStatus=1
+		where DialPiece_id=#{slideId}
+	</update>
+	 -->
+	<!-- 提交信息删除 -->
+	<delete id="submitbDelete">
+		delete from INF_Submit
+		where DialPiece_id=#{slideId}
+	</delete>
+	<!-- 提交处理状态修改 -->
+	<update id="submitbStatusUpdate">
+		update INF_DialPiece
+		set DialPiece_OperaStatus = #{status}
+		where DialPiece_id=#{slideId}
+	</update>
+</mapper>

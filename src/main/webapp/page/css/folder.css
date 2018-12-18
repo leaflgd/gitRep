@@ -1,0 +1,233 @@
+/*文件卡*/
+.file_card *{color:#cccccc;}
+.file_card{z-index:100;display:none;padding:0 8px;width: 680px;height: 819px;position: absolute;top:15%;left:30%;background-color: #6c6c6c;border-radius:5px;}
+.file_card p{width: 680px;height: 40px;position: relative;right: 8px;background:#282828;border-radius:5px 5px 0 0;padding:10px 10px;border-radius:5px 5px 0 0;}
+.week{position: relative;left: 173px} 
+#name{
+	width: 170px;
+}
+
+
+
+.file_card input{
+	border:none;border-radius:5px;background:#ffffff !important;height:38px;color:#000000 !important;outline:none;
+	z-index:5;font-size:17px;
+}
+
+
+.countLeft2 img{
+    width: 488px;
+    height: 466px;
+}
+
+
+.yb{
+	width:200px;height:38px;border:none;border-radius:5px;outline:none;color:#000000;
+}
+.file_card option{
+	color:#000000;
+}
+.file_card select{
+	border: none;border-radius: 5px;outline:none;
+}
+
+
+
+
+/*事件编号*/
+#even_number{
+	width:169px;height:38px;background-color: #ffffff;outline: none;color: #333333;position:relative;top:25px;border:none;border-radius:5px;
+}
+.even_number1{
+	position: relative;top:20px
+}
+
+/*样本来源*/
+
+.yb{
+	position: relative;right: 49px;top: 25px
+}
+.specimen_source{position: relative;bottom: 8px;left: 16px;}
+#specimen_source{
+	width: 199px;position: absolute;left: 200px;top: 85px;
+}
+#specimen_source1{
+	width: 226px;position: absolute;left: 196px;top: 85px;background-color: #ffffff;color:#000000;padding: 19px 0;
+}
+/*病例号*/
+.case_num{
+	position:relative;top:-39px;left:476px;
+}
+#medical_record{
+	background-color: #ffffff;outline: none;color: #333333;position:relative;left:475px;top:-33px;height:38px;border:none;border-radius:5px;width:100px;
+}
+
+
+
+
+/*姓名*/
+
+/*年龄*/
+.age{
+	position: relative;left: 161px
+}
+#age{
+	background-color: #4f4f4f;outline: none;width: 80px;position: relative;left: 20px;
+}
+
+/*性别*/
+.sex{
+	position: relative;left:228px;
+}
+#sex{
+	background-color: #ffffff;outline: none;width: 80px;height: 38px;position: relative;left: 40px;top: 1px;border:none;border-radius:5px;color:#000000 !important;
+}
+/*孕龄*/
+.pregnancy{
+	position: relative;left:270px;
+}
+#pregnancy{
+	background-color: #4f4f4f;outline: none;color: #ffffff;width: 80px;position: relative;left: 61px;
+}
+
+
+
+
+
+/*接种日期*/
+.vaccinate_date{
+	position: absolute;left: 206px; top:221px;
+}
+#vaccinate_date{
+	width:150px;position:absolute;left:204px;top:242px;background-color: #ffffff;outline: none;color: #333333;height:38px;border:none;border-radius:5px;
+}
+#vaccinate_date1{
+	width:171px;height: 38px;position:absolute;left:204px;top: 262px;background-color: #ffffff; color: #000000;
+}
+
+
+/*采集日期*/
+#gather_date{
+	background-color: #ffffff;outline: none;color: #333333; position:relative;left: 0;width:171px;height:38px;border:none;border-radius:5px;top:9px
+}
+.gather_date{
+	position:absolute;top:222px;left: 10px;
+}
+
+
+/*临床诊断*/
+.clinical_diagnosis{
+	position:relative;top:45px;
+}
+#diagnose1{
+	background-color: #ffffff;color:#000000;position: absolute;padding: 19px 0;top: 343px;width:622px;
+}
+#diagnose{
+	background-color: #ffffff;color:#000000;position: absolute;height: 38px;top: 343px;width:600px;outline: none;color: #333333;border:none;border-radius:5px;
+}
+
+/*意见*/
+.opinion{
+	position:relative;top:82px;
+}
+#suggestion{
+	height:76px;  width:595px;position:absolute;top:420px;
+}
+#suggestion1{
+	background-color: #ffffff;color:#000000;position: absolute;top:420px;width: 620px;padding: 38px 0;
+}
+
+/*制片人*/
+.the_producers{
+	position:absolute;bottom: 284px;
+}
+#the_producers1{
+	position: absolute;top: 537px;background-color: #ffffff;outline: none; width:188px;border:none;border-radius:5px;
+	color: #000000;padding: 19px 0;
+}
+#the_producers{
+	background-color: #ffffff;color: #000000;width:160px;position:absolute;top:537px;height: 38px;
+}
+
+/*阅片人及打印人*/
+.put_a_seal_on{
+	position: absolute;left: 225px;bottom: 284px;
+}
+#put_a_seal_on1{
+	position: absolute;background-color: #ffffff;color: #000000;width: 188px;left:225px;top:537px;padding:19px 0;
+
+}
+#put_a_seal_on{
+	width:160px;position:absolute;left:225px;top:537px
+}
+
+/*核片人*/
+.nucleus{
+	position: absolute;left: 444px;bottom:284px;
+}
+#examine_and_nucleus1{
+	background-color: #ffffff;color:#000000;width:188px;padding: 19px 0;position: absolute;left:442px;top: 537px;
+
+}
+#examine_and_nucleus{
+	width:160px;position:absolute;left:442px;top:537px;background-color: #4c4c4c;outline:none;
+
+}
+
+/*审核人*/
+.examine_and_verify{
+	position: absolute;bottom: 200px;
+}
+#examine_and_verify1{
+	position: absolute;left: 8px;top:620px;background-color: #ffffff;color: #000000;width: 188px;padding: 19px 0;
+
+}
+#examine_and_verify{
+	position:absolute;left:10px;top:620px;background-color: #ffffff;outline: none;color: #333333;border:none;border-radius: 5px;width:160px;height:38px;
+	
+}
+/*核对*/
+.check{
+	position: absolute;bottom: 200px;left:225px
+}
+#check1{
+	position: absolute;width: 188px;height: 38px;left: 224px;top: 620px;background-color: #ffffff; color: #000000;
+
+}
+#check{
+	width:188px;position:absolute;left:224px;top:620px;background-color: #4f4f4f;outline: none;color: #ffffff;
+	
+}
+
+/**/
+.report_date{
+	position:absolute;bottom: 200px;left:443px;
+}
+#report_date{
+	 width:188px;position:absolute;left:442px;top:620px;height: 38px;background-color: #ffffff;outline: none;color: #333333;border:none;border-radius: 5px;
+	
+}
+#report_date1{
+	width: 188px;height:38px;position: absolute;left:442px;bottom:160px;background-color: #ffffff;
+
+}
+/*中期*/
+#whole{
+	background-color: #ffffff;outline: none;color: #333333;position:absolute;bottom:85px;width:189px;height:38px;
+}
+.whole{
+	position:absolute;bottom: 123px;
+}
+
+/*核形*/
+.caryogram{
+	position: absolute;left: 225px; bottom: 123px;
+}
+#caryogram{
+	position:absolute;left: 225px;bottom: 85px;background-color: #ffffff;outline: none;color: #333333;width:405px;height:38px;border:none;border-radius: 5px;
+}
+
+/*确定按钮*/
+#ascertain{
+	width: 70px;height: 30px;float: right;color: #000000;position:absolute;left:50%;margin-left: -35px; border:none;border-radius:5px;bottom:20px;background:linear-gradient(#59bbe9, #2ea5df,#0791d7);outline:none;color:#ffffff;
+}

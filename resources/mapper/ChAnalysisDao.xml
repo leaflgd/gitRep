@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChAnalysisDao">
+<!--                 染色单体                                                                        -->
+	<!-- 染色单体标签 -->
+	 <resultMap type="org.zixing.dto.ChromLabel" id="chAnalyLabel">
+		<result property="inName" column="Event_id"/>
+		<result property="slideName" column="DialPiece_Num"/>
+		<result property="grayNumber" column="GreyBaseMap_Num"/>  
+		<result property="grayUrl" column="GreyBaseMap_PathShe"/>
+		<result property="chromCary" column="Arith_Karyotype"/>
+	</resultMap>
+	<select id="chCountLabelQuery" resultMap="chAnalyLabel">
+		select e.Event_id, d.DialPiece_Num ,g.GreyBaseMap_Num,g.GreyBaseMap_PathShe,g.Arith_Karyotype  
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+		where g.GreyBaseMap_id=#{grayid};
+	</select>  
+	<!-- 单个染色体查询 -->
+	<resultMap type="org.zixing.dto.ChromQuery" id="chAnalyq">
+		<result property="chromId" column="Chromosome_id"/>
+		<result property="greyId" column="GreyBaseMap_id"/>
+		<result property="chromMark" column="Chromosome_Num"/>
+		<result property="chromPath" column="Chromosome_Path"/>
+		<result property="chromEnhance" column="Chromosome_Enhance"/>
+		<result property="chromBin" column="Chromosome_Bin"/>				
+		<result property="chromUrl" column="Chromosome_Adjust"/>
+		<result property="chromState" column="Chromosome_Status" javaType="boolean" jdbcType="TINYINT"/>
+		<result property="chromCount" column="Chromosome_count"/>
+		<result property="chromAllpic" column="GreyBaseMap_AllChromosome"/>
+		<result property="cutOriPic" column="GreyBaseMap_CutOriPic"/>
+		
+		<result property="toSystemDate" column="ToSystem_Date"/>
+		<result property="inName" column="Event_id"/>
+		<result property="slideName" column="DialPiece_Num"/>
+		<result property="chCount" column="Arith_Total"/>
+		<result property="chromRemake" column="Arith_Total_Final"/>
+		<result property="grayUrlOut" column="GreyBaseMap_PathShe"/>
+		<result property="arithOffset" column="GreyBaseMap_PathOut"/>
+		<result property="grayNumber" column="GreyBaseMap_Num"/>
+		
+	</resultMap>
+	<select id="chQuery" resultMap="chAnalyq">
+		select GreyBaseMap_id,Chromosome_id,Chromosome_Num, Chromosome_Adjust,Chromosome_Status ,Chromosome_count
+		from INF_Chromosome
+		where GreyBaseMap_id=#{id}
+		and Chromosome_Opera=0
+	</select>
+	<!-- 染色体交替 -->
+	<update id="chAlternate">
+		update INF_Chromosome c
+		<if test="num==''">
+			set c.Chromosome_Status=1
+		</if>
+		<if test="num!=''">
+			set c.Chromosome_Num=#{num},c.Chromosome_Status=0
+		</if>
+		where c.Chromosome_id=#{chromId};
+	</update>
+	<!-- 查询染色体核型 -->
+	<select id="KaryotypeQuery" resultType="String">
+		select count(Chromosome_Num)
+		from INF_Chromosome c
+		where c.Chromosome_Status=0 
+		and c.GreyBaseMap_id=#{grayid}
+		<choose>
+			<when test='state=="common"'>and c.Chromosome_Num &gt;=1 and c.Chromosome_Num &lt; 23</when>
+			<when test='state=="x"'>and c.Chromosome_Num=23</when>
+			<when test='state=="y"'>and c.Chromosome_Num=24</when>
+		</choose>
+	</select>
+	<!-- 染色体复制粘贴功能 -->
+	<select id="chCopyQuery" resultMap="chAnalyq">
+		select Chromosome_id,Chromosome_Num, Chromosome_Adjust,Chromosome_Status 
+		<if test="operate=='inqu'">
+			,Chromosome_count,GreyBaseMap_id,Chromosome_Path,Chromosome_Enhance,Chromosome_Bin
+		</if>
+		from INF_Chromosome
+		where 
+		<choose>
+			<when test="operate=='init'">GreyBaseMap_id=#{id}</when>
+			<when test="operate=='inqu'">Chromosome_id=#{id}</when>
+		</choose>
+		<choose>
+			<when test="mark!='' and mark!='an'">and Chromosome_Num=#{mark}</when>
+			<when test="mark=='an'">and Chromosome_Status=1</when>
+		</choose>
+	</select>
+	<!-- 染色体粘贴 -->
+	<insert id="chCopy">
+		insert into  INF_Chromosome(GreyBaseMap_id,Chromosome_Num,Chromosome_Path,Chromosome_Bin,
+		Chromosome_Enhance,Chromosome_Adjust,Chromosome_Status ,Chromosome_count)
+		value(#{ch.greyId},#{ch.chromMark},#{ch.chromPath},#{ch.chromBin},
+		#{ch.chromEnhance},#{ch.chromUrl},#{ch.chromState},#{ch.chromCount});
+	</insert>
+	
+	<!-- 染色体核型一览初始化 -->
+	<select id = "caryviewQuery" resultMap="chAnalyq">
+		SELECT  c.Chromosome_id,c.Chromosome_Num, c.Chromosome_Adjust
+		from INF_Chromosome c
+		LEFT JOIN INF_GreyBaseMap g on g.GreyBaseMap_id=c.GreyBaseMap_id
+		LEFT JOIN INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e on  e.Num_id = d.Num_id
+		WHERE e.Event_id=#{inid}
+		and Chromosome_Opera=0
+		<choose>
+			<when test="state=='yes'">and c.Chromosome_Status=0</when>
+			<when test="state=='no'">and c.Chromosome_Num=#{chromNum}</when>
+		</choose>
+	</select>
+
+	<!-- 分析页面确定按钮把截图保存到本地并将路径保存到数据库中 -->
+	<update id = "chromConfirmOneSave">
+		update INF_GreyBaseMap
+		set GreyBaseMap_AllChromosome = #{path}
+		where GreyBaseMap_id = #{gradId} and GreyBaseMap_Num = #{grayNumber}
+	</update>
+	
+	<!-- 分割页面返回按钮把截图保存到本地并将路径保存到数据库中 -->
+	<update id = "chromConfirmTwoSave">
+		update INF_GreyBaseMap
+		set GreyBaseMap_CutOriPic = #{path}
+		where  GreyBaseMap_id = #{gradId} and GreyBaseMap_Num = #{grayNumber}
+	</update>
+	<!-- 查询玻片下所有染色体截图的路径 -->
+	<select id="chromPicQuery" resultMap="chAnalyq">
+		SELECT g.GreyBaseMap_id, g.GreyBaseMap_AllChromosome ,d.ToSystem_Date, e.Event_id,d.DialPiece_Num,g.GreyBaseMap_Num,g.Arith_Total,g.Arith_Total_Final,g.GreyBaseMap_PathShe,g.GreyBaseMap_PathOut
+		from INF_GreyBaseMap g
+		LEFT JOIN INF_DialPiece d on d.DialPiece_id = g.DialPiece_id
+		LEFT JOIN INF_Event e ON e.Num_id = d.Num_id
+		where d.DialPiece_Num = #{slideName} AND e.Event_id = #{inName} AND GreyBaseMap_AnalyStatus = 1 AND g.GreyBaseMap_AllChromosome IS not NULL
+	
+	</select>
+	
+	<!-- 查询单个染色体截图的路径 -->
+	<select id="chromSinglePicQuery" resultMap="chAnalyq">
+		SELECT GreyBaseMap_AllChromosome,GreyBaseMap_CutOriPic
+		from INF_GreyBaseMap
+		where GreyBaseMap_id = #{greyId} AND GreyBaseMap_Num = #{grayNumber} 
+	
+	</select>
+
+</mapper>

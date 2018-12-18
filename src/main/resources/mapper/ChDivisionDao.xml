@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChDivisionDao">
+	<!-- 染色体分割页面初始化 -->
+	<!-- 增强灰底图 -->
+	<select id="DivisionEnhanceGrey" resultType="String">
+		select
+		GreyBaseMap_PathEnh
+		from INF_GreyBaseMap
+		where GreyBaseMap_id=#{grayid}
+	</select>
+
+	<!-- 分割页面标签初始化 -->
+	<resultMap type="org.zixing.dto.ChromLabel" id="chDivisionLabel">
+		<result property="inName" column="Event_id"/>
+		<result property="slideName" column="DialPiece_Num"/>
+		<result property="grayNumber" column="GreyBaseMap_Num"/>  
+		<result property="grayUrl" column="GreyBaseMap_PathEnh"/>
+	</resultMap>
+	<select id="chDivisionLabelQuery" resultMap="chDivisionLabel">
+		select e.Event_id, d.DialPiece_Num ,g.GreyBaseMap_Num,g.GreyBaseMap_PathEnh
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+		where g.GreyBaseMap_id=#{greyid};
+	</select>
+	
+	<!-- 原始灰底图 -->
+	<select id="DivisionOriginalGrey" resultType="String">
+		select
+		GreyBaseMap_PathShe
+		from INF_GreyBaseMap
+		where GreyBaseMap_id=#{grayid}
+	</select>
+
+	<!-- 多体 -->
+	<resultMap type="org.zixing.dto.ChromQuery" id="chq">
+		<result property="chromId" column="Chromosome_id" />
+		<result property="greyId" column="GreyBaseMap_id" />
+		<result property="chromMark" column="Chromosome_Num" />
+		<result property="chromPath" column="Chromosome_Path" />
+		<result property="chromEnhance" column="Chromosome_Enhance" />
+		<result property="chromBin" column="Chromosome_Bin" />
+		<result property="chromUrl" column="Chromosome_Adjust" />
+		<result property="chromState" column="Chromosome_Status"
+			javaType="boolean" jdbcType="TINYINT" />
+		<result property="chromCount" column="Chromosome_count" />
+		<result property="imageSize" column="Image_Size" />
+		
+	</resultMap>
+	<select id="chMultimerInit" resultMap="chq">
+		select
+		Chromosome_id,Chromosome_Enhance,Image_Size,Chromosome_Status
+		from INF_Chromosome
+		where
+		GreyBaseMap_id=#{grayid}
+		and Chromosome_Opera=0
+		and Chromosome_Mark=0
+		and Chromosome_DeleteStatus=0
+		order by Chromosome_Num desc
+	</select>
+
+	<!-- 查询原始染色体轮廓图 -->
+	<select id="chOperationQuery" resultType="String">
+		select
+		Chromosome_Offset
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	<!-- 查询原始染色体原图 -->
+	<select id="chRawQuery" resultType="String">
+		select Chromosome_Path
+		from
+		INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 查询名称 -->
+	<resultMap type="org.zixing.dto.ChNames" id="chnames">
+		<result property="slideName" column="DialPiece_Num" />
+		<result property="grayName" column="GreyBaseMap_Num" />
+		<result property="chromName" column="Chromosome_Num" />
+	</resultMap>
+	<select id="chNamesQuery" resultMap="chnames">
+		select
+		c.Chromosome_Num,d.DialPiece_Num,g.GreyBaseMap_Num
+		from INF_Chromosome
+		c
+		left join INF_GreyBaseMap g on c.GreyBaseMap_id = g.GreyBaseMap_id
+		left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id
+		where
+		c.Chromosome_id=#{chromid};
+	</select>
+
+	<!-- 查询坐标中轮廓的最大步骤数 -->
+	<select id="chProcedureMaximum" resultType="int">
+		select
+		Cancel_OperaStep
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+		order by
+		Cancel_OperaStep
+		desc limit 1
+	</select>
+
+
+	<!-- 获取画线涂抹撤销的步骤总数 -->
+	<select id="chProcedureSum" resultType="int">
+		select Chromosome_Steps
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 设置步骤总数数 -->
+	<update id="chProcedureSumSet">
+		update INF_Chromosome
+		set Chromosome_Steps =#{stepSum}
+		where Chromosome_id=#{chromid}
+	</update>
+
+
+	<!-- 设置轮廓步骤 -->
+	<insert id="chSplittingStep">
+		insert into
+		INF_Cancel(Chromosome_id,Cancel_Offset,Cancel_OperaStep,Cancel_OperaStatus)
+		value(#{cancel.chromId},#{cancel.offset},#{cancel.num},#{cancel.status});
+	</insert>
+	
+	<!-- ****************************迭代测试************************************ -->
+	<!-- 读取步骤 -->
+	<resultMap type="org.zixing.entity.Cancel" id="chCancelQuery">
+		<result property="chromId" column="Chromosome_id" />
+		<result property="offset" column="Cancel_Offset" />
+		<result property="num" column="Cancel_OperaStep" />
+		<result property="status" column="Cancel_OperaStatus" />
+	</resultMap>
+	<select id="chSplittingQuery" resultMap="chCancelQuery">
+		select Chromosome_id,Cancel_Offset,Cancel_OperaStep,Cancel_OperaStatus
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+	</select>
+	
+	<!-- 获取指定的原始灰底图和相对坐标 -->
+	<resultMap type="org.zixing.dto.ChromOffsetQuery" id="chOffset">
+		<result property="url" column="Chromosome_Path" />
+		<result property="offset" column="Arith_Offset" />
+	</resultMap>
+	
+	<select id="chOffsetQuery" resultMap="chOffset">
+		select Chromosome_Path,Arith_Offset
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	
+	<!-- 存储分割完成的染色体-->
+	<insert id='picPathStorage'>
+		insert into
+		INF_Chromosome(GreyBaseMap_id,Chromosome_Num,Arith_Offset,Chromosome_Path,Chromosome_Mark,
+		Chromosome_Enhance,Chromosome_Adjust,Chromosome_Status,Logs_id,Chromosome_Father,Arith_OffsetPicAna,Image_Size,OrderBy_Num)
+		values
+		<foreach item="item" index="index" collection="chroms" separator=",">
+			(#{item.greyId},#{item.chromNum},#{item.arithOffset},#{item.chromPath},#{item.chromMark,javaType=INT},
+			#{item.chromEnhance},#{item.chromUrl},#{item.chromState},
+			#{item.logid,jdbcType=NUMERIC},#{item.ChromFather,jdbcType=NUMERIC},#{item.arithOffsetPicAna},#{item.imageSize},#{item.orderByNum})
+		</foreach>
+	</insert>
+
+	
+	<!-- 染色体的灰底高亮图轮廓查询 -->
+	<select id="chromHiLiteOutlineQuery" resultType="String">
+		select Arith_OffsetPicAna
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	<!-- 染色体的灰底高亮图轮廓储存 -->
+	<update id="hiLiteOutlineStorage">
+		update INF_Chromosome
+		set Arith_OffsetPicAna=#{hiLiteOutline}
+		where Chromosome_id=#{chromid}
+	</update>
+	
+	<!-- 查询染色体集 -->
+	<select id="chromConnectQuery" resultMap="chQuery">
+		select
+		GreyBaseMap_id,Chromosome_Num,Arith_Offset,Chromosome_Path,
+		Chromosome_Enhance,Chromosome_Adjust,Chromosome_Status,Chromosome_Father
+		from INF_Chromosome
+		where Chromosome_id in 
+		<foreach item="item" index="index" collection="list" open="("
+			separator="," close=")">
+			#{item} 
+		</foreach>
+	</select>
+	
+	<!-- 储存报告生成需要的灰底图 -->
+	<update id="chromGreyPicStorage">
+		update INF_GreyBaseMap
+		<if test="status==0">
+			set GreyBaseMap_CutOriPic=#{picPath}
+		</if>
+		<if test="status==1">
+			set GreyBaseMap_BabyPic=#{picPath}
+		</if>
+		where GreyBaseMap_id=#{greyid}
+	</update>
+	
+	<!-- 查询分割之后的子图 -->
+	<select id="chSonIdQuery" resultMap="chq">
+		select
+		Chromosome_id,Chromosome_Adjust,Chromosome_Enhance,Chromosome_Enhance,Chromosome_Path,Image_Size
+		from INF_Chromosome
+		 <where>  
+        <choose>  
+            <when test="chFatherId!=null and greyid==null"> 
+            	Chromosome_Status=1
+            	and Chromosome_Mark=0
+            	and Chromosome_Opera=0
+            	and Chromosome_DeleteStatus=0
+                and Chromosome_Father=#{chFatherId}
+            </when >  
+            <when test="chFatherId!=null and greyid!=null"> 
+           		Chromosome_Status=1
+           		and Chromosome_Mark=0
+           		and Chromosome_Opera=0
+           		and Chromosome_DeleteStatus=0
+                and  Chromosome_Father=#{chFatherId}
+              	and  GreyBaseMap_id=#{greyid}
+            </when >  
+            <when test="chFatherId==null and greyid!=null">  
+            	Chromosome_Status=1
+            	and Chromosome_Mark=0
+            	and Chromosome_Opera=0
+            	and Chromosome_DeleteStatus=0
+                and GreyBaseMap_id=#{greyid}
+            </when >  
+            <otherwise>  
+            	Chromosome_Status=1
+            	and Chromosome_Mark=0
+            	and Chromosome_Opera=0
+            	and Chromosome_DeleteStatus=0
+            	and GreyBaseMap_id=#{greyid}
+            </otherwise>  
+        </choose>  
+    </where>  
+		
+	</select>
+	<!-- 灰底图生成查询染色单体 -->
+	<select id="greyCreateQuery" resultMap="chQuery">
+		select Chromosome_id,Chromosome_Path,Arith_Offset,Chromosome_Num,Chromosome_Adjust
+		from INF_Chromosome
+		where Chromosome_Opera=0
+		and Chromosome_Mark=0
+		and Chromosome_DeleteStatus=0
+		and  GreyBaseMap_id=#{greyid}
+		
+	</select>
+	<!-- 存储报告所需的灰底图 -->
+	<update id="reportGreyStore">
+		update INF_GreyBaseMap
+		set GreyBaseMap_CutOriPic=#{babyPic} ,GreyBaseMap_BabyPic=#{oriPic}
+		where GreyBaseMap_id=#{greyid}
+	</update>
+	
+	<!-- *************************** -->
+	
+	<!-- 删除最后的轮廓步骤 -->
+	<delete id="DivisionStepDelete">
+		delete
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+		order by Cancel_OperaStep
+		desc limit 1
+	</delete>
+	
+	<!-- 删除所有轮廓步骤 -->
+	<delete id="DivisionStepDeletes">
+		delete
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+	</delete>
+
+	<!-- 分割状态更改 -->
+	<update id="chDivisionStatusAlter">
+		update INF_Chromosome
+		set Chromosome_Opera = #{status}
+		 <where>  
+        <choose>  
+            <when test="chromid!=null and chromids==null">  
+                Chromosome_id=#{chromid}
+            </when >  
+            <when test="chromids!=null and chromid==null">  
+               Chromosome_id  in
+				<foreach item="item" index="index" collection="chromids" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+            </when >  
+            <when test="chromids!=null and chromid!=null">  
+                Chromosome_id in(#{chromid},
+				<foreach item="item" index="index" collection="chromids" separator="," >
+					#{item}
+				</foreach>
+				)
+            </when >  
+        </choose>  
+    </where>  
+	</update>
+
+	<!-- 批量删除 -->
+	<delete id="chromDelete">
+		update INF_Chromosome
+		set Chromosome_DeleteStatus=#{num}
+		where Chromosome_id in
+		<foreach item="item" index="index" collection="chromid" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<!-- ************* 处理步骤 **************** -->
+	<!-- 查询处理步骤 -->
+	<resultMap type="org.zixing.dto.InfLog" id="ProcessStepsDelete">
+		<result column="Logs_id" property="logId" />
+		<result column="Logs_Steps" property="logName"/>
+		<result column="ChromoIdCount" property="chromCount" />
+		<result column="Chromosome_id" property="chromId" />
+		<result column="Chromosome_operaWay" property="operaWay"/>
+	</resultMap>
+	<select id="processStepsQuery" resultMap="ProcessStepsDelete">
+		select Logs_id,Logs_Steps,ChromoIdCount,Chromosome_id,Chromosome_operaWay
+		from INF_Logs
+		where GreyBaseMap_id=#{greyid} 
+		order by Logs_id asc;
+	</select>
+	
+	<select id="stepsClickQuery" resultMap="ProcessStepsDelete">
+		select ChromoIdCount,Chromosome_id,Chromosome_operaWay
+		from INF_Logs
+		where Logs_id=#{logid} 
+	</select>
+	
+	<!-- 查询最后处理步骤的id -->
+	<select id="stepsQuery" resultType="String">
+		select MAX(Logs_id)
+		from INF_Logs
+		where GreyBaseMap_id=#{greyid} 
+	</select>
+	
+	<!-- 处理步骤删除 -->
+	<delete id="processStepsDelete">
+		delete from INF_Logs
+		where Logs_id=#{logid}
+	</delete>
+	<!-- 查询删除处理步骤的父类id -->
+	<select id="chDivisionDeleteIDQuery" resultType="String">
+		select
+		Chromosome_id
+		from INF_Logs
+		where Logs_id=#{logid}
+	</select>
+
+	<!-- 查询连接的子类id -->
+	<select id="chConnectSonIdQuery" resultType="String">
+		select Chromosome_id
+		from INF_Chromosome
+		where Logs_id=#{logid}
+	</select>
+	<!-- 查询连接的父类id -->
+	<select id="chConnectFatherIdQuery" resultType="String">
+		select
+		ChromoIdCount
+		from INF_Logs
+		where Logs_id=#{logid}
+	</select>
+
+	<!-- 删除处理步骤关联的子图 -->
+	<delete id="chDivisionDelete">
+		delete from INF_Chromosome
+		where
+		Chromosome_Father=#{chlogid}
+	</delete>
+
+	<!-- 根据关联的父类id查询子类id -->
+	<select id="subgraphIdQuery" resultType="String">
+		select Chromosome_id
+		from INF_Chromosome
+		where Chromosome_Father=#{chromid}
+	</select>
+	<!-- 根据关联的子类id查询是否有对应的步骤 -->
+	<select id="sonStepQuerys" resultType="String">
+		select Logs_Steps
+		from INF_Logs
+		where Chromosome_id in
+		<foreach item="item" index="index" collection="chromids" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<!-- 模糊查询子图带有的连接步骤 -->
+	<select id="sonConnectStepQuery" resultType="String">
+		select Logs_Steps
+		from INF_Logs
+		where ChromoIdCount like concat('%,',#{chromid},',%')
+	</select>
+
+	<!-- 根据logid查询所撤回的操作步骤为何 -->
+	<select id="withdrawStepState" resultType="int">
+		select
+		Chromosome_operaWay
+		from INF_Logs
+		where Logs_id=#{logid}
+	</select>
+	<!-- 根据日志的chromid集合查询其步骤名称 -->
+	<select id="chLogName" resultType="String">
+		select Logs_Steps
+		from INF_Logs
+		where Chromosome_id in
+		<foreach collection="chromids" item="item" index="index" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<!-- 根据id查询是否是删除的复制 -->
+	<select id="chLogId" resultType="String">
+		select Chromosome_id
+		from
+		INF_Logs
+		where Chromosome_operaWay=2
+		and Logs_id=#{logid}
+	</select>
+
+
+	<!--***** 复制粘贴 ***** -->
+	<!-- 查询需要复制粘贴的染色单体 -->
+	<resultMap type="org.zixing.dto.ChromQuery" id="chQuery">
+		<result property="chromId" column="Chromosome_id" />
+		<result property="greyId" column="GreyBaseMap_id" />
+		<result property="chromMark" column="Chromosome_Num" />
+		<result property="arithOffset" column="Arith_Offset" />
+		<result property="chromPath" column="Chromosome_Path" />
+		
+		<result property="chromEnhance" column="Chromosome_Enhance" />
+		<result property="chromUrl" column="Chromosome_Adjust" />
+		<result property="chromState" column="Chromosome_Status"
+			javaType="boolean" jdbcType="TINYINT" />
+		<result property="ChromFather" column="Chromosome_Father" />
+		<result property="arithOffsetPicAna" column="Arith_OffsetPicAna" />
+		<result property="imageSize" column="Image_Size" />
+	</resultMap>
+	<select id="chCopyQuery" resultMap="chQuery">
+		select
+		GreyBaseMap_id,Chromosome_Num,Arith_Offset,Chromosome_Path,
+		Chromosome_Enhance,Chromosome_Adjust,Chromosome_Status,Chromosome_Father,Arith_OffsetPicAna,Image_Size
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	<!-- 粘贴染色单体 -->
+	<insert id="chCopy" parameterType="org.zixing.dto.ChromQuery">
+		<selectKey keyProperty="chromId" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID() AS Chromosome_id
+		</selectKey>
+		insert into
+		INF_Chromosome(GreyBaseMap_id,Chromosome_Num,Arith_Offset,Chromosome_Path,
+		Chromosome_Enhance,Chromosome_Adjust,Chromosome_Status,Chromosome_Father,Arith_OffsetPicAna,Image_Size)
+		value(#{greyId},#{chromMark},#{arithOffset},#{chromPath},#{chromEnhance},#{chromUrl},
+		#{chromState},#{ChromFather},#{arithOffsetPicAna},#{imageSize})
+	</insert>
+
+	<!-- 查询处理步骤记录 -->
+	<select id="QueryStepsMark" resultType="INT">
+		select
+		GreyBaseMap_StepsMark
+		from INF_GreyBaseMap
+		where
+		GreyBaseMap_id=#{grayid}
+	</select>
+
+	<!-- 处理步骤记录设置 -->
+	<update id="SettingStepsMark">
+		update INF_GreyBaseMap
+		set
+		GreyBaseMap_StepsMark=#{num}
+		where GreyBaseMap_id=#{grayid}
+	</update>
+
+	<!-- 添加处理步骤 -->
+	<insert id="processAdd" parameterType="org.zixing.dto.InfLog">
+		insert into
+		INF_Logs(GreyBaseMap_id,Logs_Steps,Login_Name,Chromosome_id,Chromosome_operaWay)
+		value(#{greyId},#{logSteps},#{logName},#{chromId},#{operaWay});
+	</insert>
+	
+	<insert id="processDeleteAdd" parameterType="org.zixing.dto.InfLog">
+		insert into
+		INF_Logs(GreyBaseMap_id,Logs_Steps,Login_Name,ChromoIdCount,Chromosome_operaWay)
+		value(#{greyId},#{logSteps},#{logName},#{chromCount},#{operaWay});
+	</insert>
+	
+
+	<!-- 查询染色单体 -->
+	<select id="chQuerySingle" resultMap="chQuery">
+		select
+		Chromosome_id,Chromosome_Enhance
+		from INF_Chromosome
+		where
+		Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 轮廓步骤一步删除 -->
+	<delete id="DivisionStepAllDelete">
+		delete
+		from INF_Cancel
+		where Chromosome_id=#{chromid}
+	</delete>
+
+	<!-- 轮廓高亮图查询 -->
+	<select id="chOutlineQuery" resultType="String">
+		select Arith_OffsetPicAna
+		from INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+	<select id="chOutlineLogIdQuery" resultType="String">
+		select Arith_OffsetPicAna
+		from INF_Chromosome
+		where Logs_id=#{chromid}
+	</select>
+
+	<!-- 获取父id -->
+	<select id="chFatherId" resultType="String">
+		select Chromosome_Father
+		from
+		INF_Chromosome
+		where Chromosome_id=#{chromid}
+	</select>
+
+	<!-- 连接步骤添加 -->
+	<insert id="processConnect" parameterType="org.zixing.dto.InfLog">
+		<selectKey keyProperty="logId" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID() AS Logs_id
+		</selectKey>
+		insert into
+		INF_Logs(GreyBaseMap_id,Logs_Steps,Login_Name,ChromoIdCount,Chromosome_operaWay)
+		value(#{greyId},#{logSteps},#{logName},#{chromCount},#{operaWay})
+	</insert>
+
+	<delete id="DivisionStepDeleteOneKey"> delete from INF_Cancel where
+		Chromosome_id=#{chromid} and Cancel_OperaStatus=#{status} </delete>
+	<!-- 获取最近轮廓的状态（用于查询是否属于一键交叉，分割） -->
+	<select resultType="java.lang.Object" id="chProcedureStatus"> select
+		Cancel_OperaStatus from INF_Cancel where Chromosome_id=#{chromid}
+		order by Cancel_OperaStep desc limit 1 	
+	</select>
+	
+	<update id="chromUpateNum">
+		<foreach collection="chroms" item="item" separator=";">
+            update INF_Chromosome
+            set Chromosome_Num =#{item.num},Chromosome_Status=0
+			<if test="item.url!=null and item.url!=''">
+            	,Chromosome_Adjust =#{item.url}
+            </if>
+            where Chromosome_id = #{item.chromId}
+        </foreach>
+	</update>
+	<!-- 批量写入摆正图 -->
+	<update id="writAdjustPaths">
+		<foreach collection="list" item="item" separator=";">
+            update INF_Chromosome
+            set Chromosome_Adjust =#{item.adjustUrl}
+            where Chromosome_id = #{item.chromId}
+       </foreach>
+	</update>
+	
+	<!-- 单张灰底图的染色体最大排序值查询 -->
+	<select id="sortMAXNumQuery"  resultType="INT">
+		select OrderBy_Num
+		from INF_Chromosome
+		where GreyBaseMap_id = #{greyid}
+		order by OrderBy_Num DESC LIMIT 1
+	</select>
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.DeleteDao">
+
+	<delete id="oneKeyDelete" statementType="CALLABLE">
+		CALL `one_key_delete`(#{0},#{1});
+	</delete>
+
+
+	<!-- 多选删除计数中灰底图-->
+	<delete id="deleteCountGreyBaseMap">
+		<foreach collection="array" item="item" index="index" open="" close=";" separator=";">
+			update `INF_GreyBaseMap` 
+			SET GreyBaseMap_AnalyStatus=0 , GreyBaseMap_CountStatus=0
+			, Chromosome_id =NULL , Arith_Karyotype=NULL
+			, Arith_Total=0 , Arith_Total_Final=NULL
+			, GreyBaseMap_PathShe=NULL , GreyBaseMap_PathEnh=NULL
+			, GreyBaseMap_PathOut=NULL , GreyBaseMap_Bin=NULL
+			, GreyBaseMap_CountCheck=0 , GreyBaseMap_AnalyCheck=0
+			, GreyBaseMap_AllChromosome=NULL , GreyBaseMap_CutOriPic =NULL
+			, GreyBaseMap_Big=0 , GreyBaseMap_ColorOpera=0
+			, GreyBaseMap_Small=0 , GreyBaseMap_StepsMark=1
+			, GreyBaseMap_BabyPic =NULL , GreyBaseMap_AllChromosomeBaby=NULL
+			, GreyBaseMap_Tag=0,Status=0
+			WHERE `GreyBaseMap_id`=#{item};
+			delete from INF_Task_Grey where GreyBaseMap_id = #{item} and type=1
+		</foreach>
+
+	</delete>
+
+	<select id="queryCountCheck" resultType="org.zixing.dto.GrayOper">
+		SELECT Arith_Total grayCount,GreyBaseMap_CountCheck countCheck,GreyBaseMap_AnalyCheck analyCheck  FROM `INF_GreyBaseMap` WHERE `GreyBaseMap_id`
+		in
+		<foreach collection="array" separator="," item="id" open="(" close=")">
+			#{id}
+		</foreach>
+	</select>
+</mapper>

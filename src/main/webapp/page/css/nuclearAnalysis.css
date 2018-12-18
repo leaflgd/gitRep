@@ -1,0 +1,59 @@
+.analyse_tab.sc{
+	width: 100%;
+    height: 935px;
+    border-left: 1px solid;
+    /*border-color: snow;
+     border-style: solid; */
+    /* border-color: red; */
+    display: flex;
+    flex-flow: wrap;
+
+}
+.analyse_tab--item{
+
+    width: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height:150px;
+	margin-left: -1px;
+	margin-bottom: -1px;
+
+}
+
+#analyse_Left_img_data{
+	position: relative;
+	bottom: 2px
+}
+
+.analyse_tab--item.normal{
+ 	border: 1px solid #000000; 
+}
+
+.analyse_tab--item.red{
+ 	border: 2px solid red; 
+}
+
+
+#disinName_spanimg{
+		position: relative;
+		left:10px;
+		bottom: 2px
+}
+
+
+
+.analyse_Right{position: relative; width: 46%;height: 935px;float: right;}
+
+
+.analyse_Left{position: relative; width: 54%;height: 995px;float: left;color:#999999;}
+
+.analyse_Left button{padding:0px;color:#fff;width: 9.7%;height: 60px;background-color: #424041;outline: none;border:none;position: relative;display:block;float:left;}
+#disinName_spanimg{
+	
+}
+
+.disinName_span{
+cursor:pointer;display: inline-block;width: 12.7%;height: 60px;float: left;position: relative;background-color: #424041;text-align: center;
+}

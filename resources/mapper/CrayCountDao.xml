@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.CrayCountDao">
+	<!--                 灰底图                                                                       -->
+	<!-- 查询么事件下被选中的灰底图 -->
+	<resultMap type="org.zixing.dto.GrayOper" id="grayQueryMap">
+		<result property="grayId" column="GreyBaseMap_id"/>
+		<result property="inName" column="Event_id" />
+		<result property="grayNumber" column="GreyBaseMap_Num" />
+		<result property="grayUrl" column="GreyBaseMap_PathShe" />
+		<result property="grayDate" column="ToSystem_Date" javaType="String" jdbcType="DATE"/>
+		<result property="grayCount" column="Arith_Total" />
+		<result property="grayCountRemark" column="Arith_Total_Final" />
+		<result property="grayCheck" column="GreyBaseMap_CountCheck"/>
+		<result property="slideName" column="DialPiece_Num"/>
+	</resultMap>
+	<select id="grayQuerys" resultMap="grayQueryMap">
+		select g.GreyBaseMap_id,d.DialPiece_Num,e.Event_id,g.GreyBaseMap_PathShe,d.ToSystem_Date,g.GreyBaseMap_Num,g.GreyBaseMap_CountCheck ,g.Arith_Total ,g.Arith_Total_Final
+		from INF_GreyBaseMap g
+			left join INF_DialPiece d on g.DialPiece_id = d.DialPiece_id 
+			left join INF_Event e on e.Num_id = d.Num_id
+			left join INF_Chromosome c on c.GreyBaseMap_id = g.GreyBaseMap_id
+		where e.Event_id= #{inName}
+			and GreyBaseMap_CountStatus=1
+		<choose>
+			<when test="sum=='45' or sum=='46' or sum=='47'">and g.Arith_Total=#{sum}</when>
+			<when test="sum!='45' and sum!='46' and sum!='47' and sum!=null and sum!=''">and g.Arith_Total!=45 and g.Arith_Total!=46 and g.Arith_Total!=47</when>
+		</choose> 
+		order by g.GreyBaseMap_Num asc
+	</select>
+</mapper>

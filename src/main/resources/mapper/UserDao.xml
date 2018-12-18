@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.UserDao">
+
+
+ <resultMap type="org.zixing.entity.User" id="users">
+		<result property="userLogin" column="User_LoginName"/>
+		<result property="infoOne" column="info_one"/>
+		<result property="infoTwo" column="info_two"/>  
+		<result property="infoThree" column="info_three"/>
+		<result property="endDate" column="Search_endTime"/>
+	</resultMap>
+
+	<!-- 为dao接口提供sql语句配置 -->
+	<!--登录 -->
+	<select id="userLog" parameterType="org.zixing.entity.User" resultType="String">
+		select User_Name
+		from INF_User
+		where User_LoginName=#{userLogin}
+		and User_Password=#{userPassword}
+	</select>
+	<!-- 注册 -->
+	<insert id="userReg" parameterType="org.zixing.entity.User">
+		insert into
+		INF_User(User_Name,User_LoginName,User_Password,Create_Date)
+		value(#{userName},#{userLogin},#{userPassword},#{userDate});
+	</insert>
+	<!-- 单个查询 -->
+	<select id="userLogin" parameterType="String" resultType="String">
+		select User_Name
+		from INF_User
+		where User_LoginName = #{_parameter}
+	</select>
+	<!-- 查询所有用户名 -->
+	<select id="logName" resultType="String">
+		select User_LoginName from INF_User
+	</select>
+	
+	<!-- 查询用户表中是否存在阅片及报告打印人相同的用户名 -->
+	<select id="userNameQuery" resultType="String">
+		select User_LoginName
+		from INF_User
+		where User_Name = #{putAsealOn}
+	</select>
+	
+	<!-- 根据阅片及报告打印人更新用户表中用户的工作量 -->
+	<update id = "updateUserWork">
+		update INF_User
+		set User_Workload = User_Workload+1
+		where User_LoginName = #{putAsealOn}
+	</update>
+	
+	<select id="userNamesQuery" resultType="String">
+		select User_Name
+		from INF_User
+	</select>
+	
+	<update id="updateUserThreeInfo">
+		update INF_User
+		set info_one = #{date},info_two = #{eventStatus},info_three = #{eventId}
+		,Search_endTime=#{endDate}
+		where User_LoginName = #{loginName}
+	</update>
+	
+	<select id="userThreeInfoQuery" resultMap ="users">
+		select User_LoginName,info_one,info_two,info_three,Search_endTime 
+		from INF_User
+		where User_LoginName = #{loginName}
+	</select>
+	
+	<select id="userRegCheck" resultType="String">
+		select User_LoginName from INF_User
+		where User_LoginName = #{username}
+	</select>
+	<select id="checkName" resultType="String">
+        select User_Name from INF_User
+        where User_LoginName = #{name}
+    </select>
+    
+    <!-- 更新数据精选查询到数据库INF_USER info_one字段 -->
+        <select id="updateMem" >
+       UPDATE INF_User SET SearchMem=#{inName} WHERE User_LoginName=#{loginName}
+    </select>
+    
+    <!-- 根据用户查询数据精选记忆搜索SearchMem字段 -->
+    <select id="getMem" resultType="String">
+      SELECT SearchMem FROM INF_User WHERE User_LoginName=#{user}
+    </select>
+</mapper>

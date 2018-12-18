@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zixing.dao.ChromatidDao">
+	<!--  事件核对状态查询  -->
+	<resultMap type="org.zixing.dto.IncidentCheck" id="incheck">
+		<result property="inName" column="Event_id" />
+		<result property="inCheck" column="Check_Status" javaType="BOOLEAN" jdbcType="TINYINT"/>
+	</resultMap>
+	<select id="incidentQuery" resultMap="incheck">
+		select distinct e.Event_id , e.Check_Status
+		from INF_Event e
+		join INF_DialPiece d on d.Num_id = e.Num_id
+		join INF_GreyBaseMap g on g.DialPiece_id = d.DialPiece_id 
+		where (g.GreyBaseMap_AnalyStatus = 1 || g.GreyBaseMap_CountStatus = 1)
+		<if test='incheck!=""'>
+			and e.Check_Status=#{incheck}
+		</if>
+		<if test='inName!=""'>
+			and e.Event_id like concat('%',#{inName},'%')
+		</if>
+		<if test='date!=""'>
+			and d.ToSystem_Date=#{date,jdbcType=DATE}
+		</if>	
+		order by e.Event_id asc
+	</select>
+	
+	
+	
+</mapper>

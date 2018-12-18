@@ -1,0 +1,41 @@
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi.schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+				http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+		version="3.1" etadata-complete="true">
+		<!-- 修改servlet版本为3.1 -->
+		<!-- 配置DispatcherServlet -->
+		
+		<servlet>
+			<servlet-name>chromosome-dispatcher</servlet-name>
+			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+			<!-- 配置pringMVC需要加载的配置文件 
+			spring-dao.xml,spring-service.xml,spring-web.xml
+			Mybatis -> spring -> springMVC
+			-->
+			<init-param>
+				<param-name>contextConfigLocation</param-name>
+				<param-value>classpath:spring/spring-*.xml</param-value>
+			</init-param>
+		</servlet> 
+		
+		<!--拦截 -->
+		<servlet-mapping>
+			<servlet-name>chromosome-dispatcher</servlet-name>
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>
+		<!-- 监控器线程启动 -->
+		<!-- <listener>
+			<listener-class>org.zixing.util.StartTaskListener</listener-class>
+		</listener> -->
+
+	<!-- log4j 配置 -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:spring/log4j.properties</param-value>
+		<!-- <param-value>/WEB-INF/log4j.xml</param-value> -->
+	</context-param>
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+</web-app>
